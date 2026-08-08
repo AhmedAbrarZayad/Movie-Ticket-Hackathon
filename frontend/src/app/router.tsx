@@ -6,6 +6,8 @@ import { BookingRoute } from './routes/booking'
 import { PaymentRoute } from './routes/payment'
 import { BookingConfirmationRoute } from './routes/booking-confirmation'
 import { NotFoundRoute } from './routes/not-found'
+import { LoginRoute } from './routes/login'
+import { RegisterRoute } from './routes/register'
 
 export const appRouter = createBrowserRouter([
   {
@@ -27,6 +29,14 @@ export const appRouter = createBrowserRouter([
   {
     path: routes.bookingConfirmation,
     element: <BookingConfirmationRoute />,
+  },
+  {
+    path: routes.login,
+    element: <LoginRoute />,
+  },
+  {
+    path: routes.register,
+    element: <RegisterRoute />,
   },
   {
     path: '*',

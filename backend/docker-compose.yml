@@ -8,11 +8,18 @@ services:
     image: cinemaseat-backend:${IMAGE_TAG:-local}
     environment:
       NODE_ENV: production
-      PORT: 3000
+      PORT: ${PORT:-3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-cinemaseat}:${POSTGRES_PASSWORD:-cinemaseat}@db:5432/${POSTGRES_DB:-cinemaseat}
       REDIS_URL: redis://redis:6379
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-development-access-secret-change-before-production}
+      JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-development-refresh-secret-change-before-production}
+      COOKIE_SECURE: ${COOKIE_SECURE:-false}
+      CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-your_cloud_name}
+      CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-your_api_key}
+      CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-your_api_secret}
     ports:
-      - "${API_PORT:-3000}:3000"
+      - "${API_PORT:-3000}:${PORT:-3000}"
     depends_on:
       db:
         condition: service_healthy
@@ -21,7 +28,7 @@ services:
     init: true
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:3000/health"]
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:$${PORT}/health"]
       interval: 10s
       timeout: 3s
       retries: 5
@@ -37,6 +44,7 @@ services:
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-cinemaseat}
     volumes:
       - postgres-data:/var/lib/postgresql/data
+      - ./docker/init:/docker-entrypoint-initdb.d:ro
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
