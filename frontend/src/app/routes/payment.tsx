@@ -1,105 +1,43 @@
-import { useEffect } from 'react'
-import { useLocation, useNavigate, useParams } from 'react-router-dom'
+import { useEffect, useState } from 'react'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { routes } from '../../config/routes'
-import { useMovieDetails } from '../../features/movies/hooks/use-movie-details'
-import { PaymentForm } from '../../features/payments/components/payment-form'
-import { PaymentStatus } from '../../features/payments/components/payment-status'
-import { usePayment } from '../../features/payments/hooks/use-payment'
-
-interface PaymentLocationState {
-  seats?: string[]
-  total?: number
-}
+import { getBooking } from '../../features/booking/api/create-booking'
+import { sendBookingOtp, verifyBookingOtp } from '../../features/payments/api/create-payment-intent'
+import { startPayment } from '../../features/payments/api/confirm-payment'
+import { toApiError } from '../../lib/api/api-error'
+import { formatBDT } from '../../lib/utils/currency'
+import type { BookingDetails } from '../../types/booking'
 
 export function PaymentRoute() {
-  const { movieId } = useParams()
-  const navigate = useNavigate()
-  const location = useLocation()
-  const state = (location.state as PaymentLocationState | null) ?? null
+  const { movieId = '' } = useParams(); const [params] = useSearchParams(); const navigate = useNavigate()
+  const bookingId = params.get('bookingId'); const [booking, setBooking] = useState<BookingDetails | null>(null)
+  const [phone, setPhone] = useState('+880'); const [code, setCode] = useState(''); const [step, setStep] = useState<'phone' | 'otp' | 'paying'>('phone')
+  const [busy, setBusy] = useState(false); const [error, setError] = useState<string | null>(null)
 
-  const details = useMovieDetails(movieId)
-
-  const selectedSeats = state?.seats?.length ? state.seats : ['F12']
-  const ticketTotal = state?.total ?? 17.5
-
-  const payment = usePayment(() => {
-    window.setTimeout(() => {
-      navigate(routes.bookingConfirmation.replace(':movieId', movieId ?? ''), {
-        state: {
-          seats: selectedSeats,
-          total: ticketTotal,
-        },
-      })
-    }, 1000)
-  })
-
-  useEffect(() => {
-    window.scrollTo(0, 0)
-  }, [])
-
-  if (details.isLoading) return <main className="cinema-bg flex min-h-screen items-center justify-center text-[var(--muted)]">Loading payment…</main>
-  if (!details.movie) return <main className="cinema-bg flex min-h-screen items-center justify-center text-red-200">{details.error || 'Movie not found.'}</main>
-  const selectedMovie = details.movie
-
-  return (
-    <main
-      className="cinema-bg relative flex min-h-screen items-center justify-center bg-cover bg-center p-4 md:p-16"
-      style={{
-        backgroundImage:
-          "url('https://lh3.googleusercontent.com/aida-public/AB6AXuC3QVUGkFIX_FLNw4P3-wURQAfRp61TDV9Rmi925xmalmGtE0xU5R_tVs4guMk44Le35iH2Cmp_rJQwMhGBXOre6cgf8bc49CWZsinzoF9uA8SEJRwsSSyDkRIpH8Iln4yT89NeSyFQIG9gNlR7_yFZ7jD1cmJZ8aRLX-6JvtUJTp9aWEQYlLk0DqatBvOU1ossv214hmUk-Yd78gclovFHyYSQF6I6ZNqgBhDK2fwlQM9rv9yIoGZLng')",
-      }}
-    >
-      <div className="glass-panel fade-in relative z-10 flex w-full max-w-4xl flex-col overflow-hidden rounded-xl shadow-2xl md:flex-row">
-        <section className="relative h-64 w-full md:h-auto md:w-2/5">
-          <img
-            className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-overlay"
-            src={selectedMovie.posterUrl ?? undefined}
-            alt={`${selectedMovie.title} poster`}
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] to-transparent md:bg-gradient-to-r md:to-[var(--surface)]/50" />
-          <div className="absolute bottom-0 left-0 w-full p-8">
-            <div className="mb-4 inline-block rounded-full border border-white/10 bg-[var(--surface)]/50 px-3 py-1 text-xs tracking-wider text-[var(--secondary)] uppercase backdrop-blur-md">
-              Booking Summary
-            </div>
-            <h2 className="mb-2 text-2xl font-semibold text-[var(--text-title)]">{selectedMovie.title}</h2>
-            <div className="mb-6 flex items-center gap-4 text-[var(--muted)]">
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-lg">calendar_today</span>
-                Today, 8:30 PM
-              </span>
-              <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-lg">chair</span>
-                {selectedSeats.join(', ')}
-              </span>
-            </div>
-            <div className="flex items-center justify-between border-t border-white/10 pt-4 text-[var(--text)]">
-              <span>Total</span>
-              <span className="text-2xl font-semibold text-[var(--primary)]">${ticketTotal.toFixed(2)}</span>
-            </div>
-          </div>
-        </section>
-
-        <section className="relative w-full bg-[var(--surface-container)]/90 p-8 md:w-3/5 md:p-12">
-          <PaymentForm
-            amount={ticketTotal}
-            formValues={payment.formValues}
-            onFieldChange={payment.updateField}
-            onSubmit={payment.submitPayment}
-          />
-
-          {payment.step === 'otp' && (
-            <PaymentStatus
-              otpDigits={payment.otpDigits}
-              verificationStatus={payment.verificationStatus}
-              phoneMask="+880 1XXX-XXXXXX"
-              onBack={payment.returnToPayment}
-              onResend={payment.resendOtp}
-              onOtpChange={payment.updateOtp}
-              onOtpBackspace={payment.clearOtpAt}
-            />
-          )}
-        </section>
-      </div>
-    </main>
-  )
+  useEffect(() => { if (!bookingId) return; getBooking(bookingId).then(setBooking).catch((e) => setError(toApiError(e).message)) }, [bookingId])
+  async function sendOtp() { if (!bookingId) return; setBusy(true); setError(null); try { await sendBookingOtp(bookingId, phone); setStep('otp') } catch (e) { setError(toApiError(e).message) } finally { setBusy(false) } }
+  async function verifyAndPay() {
+    if (!bookingId) return; setBusy(true); setError(null)
+    try {
+      await verifyBookingOtp(bookingId, code); await startPayment(bookingId); setStep('paying')
+      for (let attempt = 0; attempt < 30; attempt += 1) {
+        await new Promise((resolve) => window.setTimeout(resolve, 1000)); const current = await getBooking(bookingId); setBooking(current)
+        if (current.status === 'CONFIRMED') { navigate(`${routes.bookingConfirmation.replace(':movieId', movieId)}?bookingId=${bookingId}`, { replace: true }); return }
+        if (['FAILED', 'EXPIRED'].includes(current.status)) throw new Error(`Payment ended with status ${current.status}.`)
+      }
+      throw new Error('Payment is still processing. Refresh this page to check again.')
+    } catch (e) { setError(e instanceof Error ? e.message : toApiError(e).message); setStep('otp') }
+    finally { setBusy(false) }
+  }
+  if (!bookingId) return <main className="cinema-bg flex min-h-screen items-center justify-center text-red-200">No booking was selected.</main>
+  return <main className="cinema-bg flex min-h-screen items-center justify-center p-5">
+    <section className="glass-panel w-full max-w-xl rounded-2xl p-8 md:p-12">
+      <p className="mb-2 text-sm uppercase tracking-widest text-[var(--primary)]">Secure checkout</p>
+      <h1 className="mb-2 text-3xl font-semibold">Complete your booking</h1>
+      {booking && <div className="mb-8 rounded-xl bg-white/5 p-5"><div className="flex justify-between"><span>Reference</span><strong>{booking.bookingRef}</strong></div><div className="mt-2 flex justify-between"><span>Seats</span><span>{booking.seats?.map((s) => s.seatLabel).join(', ') || booking.seatCount}</span></div><div className="mt-2 flex justify-between text-xl"><span>Total</span><strong className="text-[var(--primary)]">{formatBDT(booking.totalAmountCents)}</strong></div></div>}
+      {step === 'phone' && <form onSubmit={(e) => { e.preventDefault(); void sendOtp() }}><label className="mb-2 block text-sm" htmlFor="phone">Mobile number</label><input id="phone" className="mb-5 w-full rounded-xl border border-white/10 bg-black/20 p-4" value={phone} onChange={(e) => setPhone(e.target.value)} required /><button disabled={busy} className="w-full rounded-xl bg-[var(--primary-container)] p-4 disabled:opacity-50">{busy ? 'Sending…' : 'Send verification code'}</button></form>}
+      {(step === 'otp' || step === 'paying') && <form onSubmit={(e) => { e.preventDefault(); void verifyAndPay() }}><label className="mb-2 block text-sm" htmlFor="otp">Verification code</label><input id="otp" inputMode="numeric" maxLength={6} className="mb-2 w-full rounded-xl border border-white/10 bg-black/20 p-4 text-center text-2xl tracking-[.5em]" value={code} onChange={(e) => setCode(e.target.value.replace(/\D/g, ''))} required /><p className="mb-5 text-xs text-[var(--muted)]">Demo gateway code: 123456</p><button disabled={busy || code.length < 4} className="w-full rounded-xl bg-[var(--primary-container)] p-4 disabled:opacity-50">{step === 'paying' ? 'Waiting for gateway…' : busy ? 'Processing…' : 'Verify and pay'}</button></form>}
+      {error && <p role="alert" className="mt-5 rounded-xl bg-red-500/10 p-4 text-red-200">{error}</p>}
+    </section>
+  </main>
 }

@@ -22,7 +22,7 @@ export function SeatMap({ rows, onSeatClick }: SeatMapProps) {
                   <button
                     key={seat.id}
                     type="button"
-                    aria-label={`Seat ${seat.id}`}
+                    aria-label={`Seat ${seat.label}`}
                     onClick={() => onSeatClick(seat.id)}
                     className={`seat ${seat.status} ${index === 4 ? 'mr-8' : ''}`}
                   />
@@ -60,4 +60,3 @@ function LegendItem({ title, sampleClass }: LegendItemProps) {
     </div>
   )
 }
-

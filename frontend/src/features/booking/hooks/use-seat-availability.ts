@@ -1,149 +1,48 @@
-import { useEffect, useMemo, useState } from 'react'
-import type { BookingBreakdown, Seat, SeatRow } from '../types'
+import { useCallback, useEffect, useMemo, useState } from 'react'
+import { toApiError } from '../../../lib/api/api-error'
+import type { Seat, SeatRow, ShowtimeSeatMap } from '../../../types/booking'
+import { getSeatAvailability } from '../api/get-seat-availability'
 
-const DEFAULT_BREAKDOWN: BookingBreakdown = {
-	ticketPrice: 15,
-	fees: 2.5,
+export function useSeatAvailability(showtimeId: string | null) {
+  const [seatMap, setSeatMap] = useState<ShowtimeSeatMap | null>(null)
+  const [selectedIds, setSelectedIds] = useState<string[]>([])
+  const [isLoading, setIsLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+
+  const refresh = useCallback(async (quiet = false) => {
+    if (!showtimeId) { setError('Choose a showtime before selecting seats.'); setIsLoading(false); return }
+    if (!quiet) setIsLoading(true)
+    try {
+      const data = await getSeatAvailability(showtimeId)
+      setSeatMap(data)
+      setSelectedIds((current) => current.filter((id) => data.seats.some((seat) => seat.id === id && seat.status === 'AVAILABLE')))
+      setError(null)
+    } catch (requestError) { setError(toApiError(requestError).message) }
+    finally { if (!quiet) setIsLoading(false) }
+  }, [showtimeId])
+
+  useEffect(() => {
+    void refresh()
+    const timer = window.setInterval(() => void refresh(true), 5000)
+    return () => window.clearInterval(timer)
+  }, [refresh])
+
+  const rows = useMemo<SeatRow[]>(() => {
+    const grouped = new Map<string, Seat[]>()
+    for (const source of seatMap?.seats ?? []) {
+      const status = selectedIds.includes(source.id) ? 'selected' : source.status.toLowerCase() as Seat['status']
+      const seat: Seat = { id: source.id, label: source.seatLabel, row: source.row, number: source.col, status }
+      grouped.set(source.row, [...(grouped.get(source.row) ?? []), seat])
+    }
+    return [...grouped].map(([row, seats]) => ({ row, seats }))
+  }, [seatMap, selectedIds])
+
+  const selectedSeats = useMemo(() => rows.flatMap((row) => row.seats.filter((seat) => seat.status === 'selected')), [rows])
+  const totalAmountCents = selectedSeats.length * (seatMap?.priceCents ?? 0)
+  function toggleSeat(seatId: string) {
+    const seat = seatMap?.seats.find((candidate) => candidate.id === seatId)
+    if (!seat || seat.status !== 'AVAILABLE') return
+    setSelectedIds((current) => current.includes(seatId) ? current.filter((id) => id !== seatId) : current.length < 8 ? [...current, seatId] : current)
+  }
+  return { rows, selectedSeats, seatMap, totalAmountCents, isLoading, error, refresh, toggleSeat }
 }
-
-function createRow(row: string, statuses: Seat['status'][]): SeatRow {
-	return {
-		row,
-		seats: statuses.map((status, index) => ({
-			id: `${row}${String(index + 1).padStart(2, '0')}`,
-			row,
-			number: index + 1,
-			status,
-		})),
-	}
-}
-
-const INITIAL_ROWS: SeatRow[] = [
-	createRow('A', [
-		'booked',
-		'booked',
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-		'booked',
-		'booked',
-	]),
-	createRow('B', [
-		'available',
-		'available',
-		'booked',
-		'booked',
-		'available',
-		'available',
-		'selected',
-		'available',
-		'available',
-		'available',
-	]),
-	createRow('C', [
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-		'held',
-		'held',
-		'available',
-		'available',
-		'booked',
-	]),
-	createRow('D', [
-		'available',
-		'booked',
-		'booked',
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-		'available',
-	]),
-	createRow('E', [
-		'booked',
-		'booked',
-		'booked',
-		'booked',
-		'booked',
-		'booked',
-		'available',
-		'available',
-		'available',
-		'available',
-	]),
-]
-
-export function useSeatAvailability() {
-	const [rows, setRows] = useState(INITIAL_ROWS)
-	const [remainingSeconds, setRemainingSeconds] = useState(5 * 60 - 1)
-
-	useEffect(() => {
-		const timer = window.setInterval(() => {
-			setRemainingSeconds((current) => {
-				if (current <= 0) {
-					return 0
-				}
-				return current - 1
-			})
-		}, 1000)
-
-		return () => {
-			window.clearInterval(timer)
-		}
-	}, [])
-
-	const selectedSeats = useMemo(() => {
-		return rows.flatMap((row) => row.seats.filter((seat) => seat.status === 'selected'))
-	}, [rows])
-
-	const total = useMemo(() => {
-		return selectedSeats.length * DEFAULT_BREAKDOWN.ticketPrice + DEFAULT_BREAKDOWN.fees
-	}, [selectedSeats.length])
-
-	const heldTime = useMemo(() => {
-		const minutes = Math.floor(remainingSeconds / 60)
-		const seconds = remainingSeconds % 60
-		return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}`
-	}, [remainingSeconds])
-
-	function toggleSeat(seatId: string) {
-		setRows((currentRows) =>
-			currentRows.map((row) => ({
-				...row,
-				seats: row.seats.map((seat) => {
-					if (seat.id !== seatId) {
-						return seat
-					}
-
-					if (seat.status === 'booked' || seat.status === 'held') {
-						return seat
-					}
-
-					return {
-						...seat,
-						status: seat.status === 'selected' ? 'available' : 'selected',
-					}
-				}),
-			})),
-		)
-	}
-
-	return {
-		rows,
-		selectedSeats,
-		ticketPrice: DEFAULT_BREAKDOWN.ticketPrice,
-		fees: DEFAULT_BREAKDOWN.fees,
-		total,
-		heldTime,
-		toggleSeat,
-	}
-}
-

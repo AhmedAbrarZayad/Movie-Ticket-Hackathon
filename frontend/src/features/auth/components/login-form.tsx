@@ -1,7 +1,7 @@
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useState } from 'react'
 import { useForm } from 'react-hook-form'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import { routes } from '../../../config/routes'
 import { toApiError } from '../../../lib/api/api-error'
 import { loginSchema, type LoginFormValues } from '../../../lib/validators/auth.schema'
@@ -11,6 +11,7 @@ import { FormField } from './form-field'
 export function LoginForm() {
   const { login } = useAuth()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
   const [submitError, setSubmitError] = useState('')
   const { register, handleSubmit, formState: { errors, isSubmitting } } = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
@@ -21,7 +22,8 @@ export function LoginForm() {
     setSubmitError('')
     try {
       await login(values)
-      navigate(routes.home, { replace: true })
+      const returnTo = searchParams.get('returnTo')
+      navigate(returnTo?.startsWith('/') ? returnTo : routes.home, { replace: true })
     } catch (error) {
       setSubmitError(toApiError(error).message)
     }
