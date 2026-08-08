@@ -27,10 +27,10 @@ export function MovieCard({ movie }: MovieCardProps) {
         <p className="mb-4 line-clamp-2 text-[var(--muted)]">{movie.genres.join(', ')}</p>
 
         <Link
-          to={routes.booking.replace(':movieId', movie.id)}
+          to={routes.movieDetails.replace(':movieId', movie.id)}
           className="w-full translate-y-4 rounded-lg border border-white/10 bg-[var(--surface-bright)] py-3 text-center text-xs tracking-wider text-[var(--text)] uppercase opacity-0 transition-all duration-300 group-hover:translate-y-0 group-hover:border-transparent group-hover:bg-[var(--primary-container)] group-hover:text-white group-hover:opacity-100"
         >
-          Book Now
+          View Showtimes
         </Link>
       </div>
     </article>

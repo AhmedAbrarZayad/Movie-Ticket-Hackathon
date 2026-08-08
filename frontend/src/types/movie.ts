@@ -2,14 +2,17 @@ export type MovieStatus = 'now-showing' | 'coming-soon'
 
 export interface Movie {
   id: string
+  tmdbId: number
   title: string
   slug: string
   genres: string[]
   rating: number
-  posterUrl: string
-  trailerUrl?: string
-  heroDescription: string
-  heroTag: string
+  posterUrl: string | null
+  backdropUrl: string | null
+  trailerUrl: string | null
+  description: string | null
+  durationMinutes: number
+  releaseDate: string
   status: MovieStatus
 }
 

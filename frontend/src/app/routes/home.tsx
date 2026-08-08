@@ -3,6 +3,7 @@ import { Header } from '../../components/layout/header'
 import { PageContainer } from '../../components/layout/page-container'
 import { MovieList } from '../../features/movies/components/movie-list'
 import { useHomeViewModel } from '../../hooks/use-home-view-model'
+import { routes } from '../../config/routes'
 
 export function HomeRoute() {
   const viewModel = useHomeViewModel()
@@ -17,8 +18,9 @@ export function HomeRoute() {
             <div
               className="h-full w-full bg-cover bg-center"
               style={{
-                backgroundImage:
-                  "url('https://lh3.googleusercontent.com/aida-public/AB6AXuAj60jXPEwz83L7iBWITQ68hX-9wM84XfWwCLZ0dxs_mPS1VsoelS9KOurjjMXXjmf_AFInBP8YT1785wScok50KuZG01Q3F0JNaVldVOiUV1f4BjcRLWMgVu0y9mvViRN1u-pr_dVVbOCAJf4D1naZ3InBbTYosjDUb4AIMH2SO7P3D11zNQWAJvo33yULCcTIqRWQJZSHKelRDbfk7L7floKz_gdp2ClZTypXd0dlmErRh8X7G1pxzQ')",
+                backgroundImage: viewModel.featuredMovie?.backdropUrl
+                  ? `url('${viewModel.featuredMovie.backdropUrl}')`
+                  : 'linear-gradient(135deg, #261014, #111218)',
               }}
             />
             <div className="absolute inset-0 bg-gradient-to-t from-[#0B0B0F] via-[#0B0B0F]/60 to-transparent" />
@@ -28,7 +30,7 @@ export function HomeRoute() {
           <PageContainer className="relative z-10 w-full pb-16">
             <div className="mb-4 flex gap-2">
               <span className="glass-panel rounded-full border border-white/20 px-3 py-1 text-xs tracking-widest uppercase">
-                {viewModel.featuredMovie?.heroTag ?? 'Now Showing'}
+                {viewModel.featuredMovie?.status === 'coming-soon' ? 'Coming Soon' : 'Now Showing'}
               </span>
               <span className="glass-panel rounded-full border border-white/20 px-3 py-1 text-xs uppercase">IMAX</span>
             </div>
@@ -36,17 +38,17 @@ export function HomeRoute() {
               {viewModel.featuredMovie?.title ?? 'CinemaSeat'}
             </h1>
             <p className="mb-8 max-w-2xl text-lg text-[var(--muted)]">
-              {viewModel.featuredMovie?.heroDescription ??
+              {viewModel.featuredMovie?.description ??
                 'Explore the latest blockbusters and reserve your seats in seconds.'}
             </p>
             <div className="flex flex-wrap gap-4">
-              <button className="rounded-lg bg-[var(--primary-container)] px-8 py-3 text-xs tracking-wider text-white uppercase transition-transform hover:scale-[1.02]" type="button">
-                Book Now
-              </button>
-              <button className="glass-panel flex items-center gap-2 rounded-lg px-8 py-3 text-xs tracking-wider uppercase transition-colors hover:bg-white/10" type="button">
+              {viewModel.featuredMovie && <Link to={routes.movieDetails.replace(':movieId', viewModel.featuredMovie.id)} className="rounded-lg bg-[var(--primary-container)] px-8 py-3 text-xs tracking-wider text-white uppercase transition-transform hover:scale-[1.02]">
+                View Showtimes
+              </Link>}
+              {viewModel.featuredMovie?.trailerUrl && <a href={viewModel.featuredMovie.trailerUrl} target="_blank" rel="noreferrer" className="glass-panel flex items-center gap-2 rounded-lg px-8 py-3 text-xs tracking-wider uppercase transition-colors hover:bg-white/10">
                 <span className="material-symbols-outlined">play_arrow</span>
                 Trailer
-              </button>
+              </a>}
             </div>
           </PageContainer>
         </section>
@@ -80,7 +82,14 @@ export function HomeRoute() {
             </div>
           </div>
 
-          <MovieList movies={viewModel.visibleMovies} />
+          {viewModel.isLoading ? (
+            <div className="glass-panel rounded-xl p-12 text-center text-[var(--muted)]">Loading movies…</div>
+          ) : viewModel.error ? (
+            <div className="glass-panel rounded-xl border border-red-400/20 p-10 text-center">
+              <p className="mb-4 text-red-200">{viewModel.error}</p>
+              <button type="button" onClick={viewModel.retry} className="rounded-lg bg-[var(--primary-container)] px-5 py-2 text-white">Try again</button>
+            </div>
+          ) : <MovieList movies={viewModel.visibleMovies} />}
 
           <div className="mt-12 flex items-center justify-center gap-2">
             {Array.from({ length: viewModel.totalPages }, (_, index) => {
@@ -109,3 +118,4 @@ export function HomeRoute() {
     </div>
   )
 }
+import { Link } from 'react-router-dom'

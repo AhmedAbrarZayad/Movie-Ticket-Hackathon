@@ -1,5 +1,4 @@
-import { useMemo } from 'react'
-import { movies } from '../features/movies'
+import { useMovies } from '../features/movies/hooks/use-movies'
 import { useFeaturedMovie } from './use-featured-movie'
 import { useMovieSearch } from './use-movie-search'
 import { useMovieTabs } from './use-movie-tabs'
@@ -9,20 +8,10 @@ export function useHomeViewModel() {
   const { query, debouncedQuery, setQuery } = useMovieSearch('')
   const { activeTab, setActiveTab } = useMovieTabs('now-showing')
 
-  const filteredMovies = useMemo(() => {
-    return movies.filter((movie) => {
-      const matchesTab = movie.status === activeTab
-      const matchesSearch =
-        debouncedQuery.length === 0 ||
-        movie.title.toLowerCase().includes(debouncedQuery) ||
-        movie.genres.join(' ').toLowerCase().includes(debouncedQuery)
+  const catalogue = useMovies({ search: debouncedQuery || undefined, status: activeTab })
 
-      return matchesTab && matchesSearch
-    })
-  }, [activeTab, debouncedQuery])
-
-  const pagination = usePagination(filteredMovies, 6)
-  const featuredMovie = useFeaturedMovie(filteredMovies)
+  const pagination = usePagination(catalogue.movies, 6)
+  const featuredMovie = useFeaturedMovie(catalogue.movies)
 
   function handleTabChange(nextTab: 'now-showing' | 'coming-soon') {
     setActiveTab(nextTab)
@@ -39,5 +28,8 @@ export function useHomeViewModel() {
     page: pagination.page,
     totalPages: pagination.totalPages,
     goToPage: pagination.goToPage,
+    isLoading: catalogue.isLoading,
+    error: catalogue.error,
+    retry: catalogue.retry,
   }
 }

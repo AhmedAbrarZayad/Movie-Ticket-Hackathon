@@ -1,30 +1,26 @@
-import { Router } from 'express'
-import { catalogueController } from './catalogue.controller.js'
-import { catalogueService } from './catalogue.service.js'
+import { Router } from 'express';
+import { createCatalogueController } from './catalogue.controller.js';
+import { CatalogueError } from './catalogue.errors.js';
 
-export const catalogueRouter = Router()
+const asyncRoute = (handler) => (request, response, next) => {
+  Promise.resolve(handler(request, response, next)).catch(next);
+};
 
-catalogueRouter.get('/movies', catalogueController.getMovies)
-catalogueRouter.get('/movies/:movieId', catalogueController.getMovie)
-catalogueRouter.get('/rooms', catalogueController.getRooms)
-catalogueRouter.get('/rooms/:roomId/seats', (req, res) => {
-  const { roomId } = req.params
-  const seats = catalogueService.getSeatsByRoom(roomId)
+export function createCatalogueRouter(controller = createCatalogueController()) {
+  const router = Router();
+  router.get('/movies', asyncRoute(controller.getMovies));
+  router.get('/movies/:movieId/showtimes', asyncRoute(controller.getMovieShowtimes));
+  router.get('/movies/:movieId', asyncRoute(controller.getMovie));
+  router.get('/theatres', asyncRoute(controller.getTheatres));
+  return router;
+}
 
-  res.json({
-    success: true,
-    data: seats,
-  })
-})
-catalogueRouter.get('/seats', catalogueController.getSeats)
-catalogueRouter.get('/showtimes', catalogueController.getShowtimes)
-catalogueRouter.get('/showtimes/:movieId', (req, res) => {
-  const { movieId } = req.params
-  const showtimes = catalogueService.getShowtimesByMovie(movieId)
+export const catalogueRouter = createCatalogueRouter();
 
-  res.json({
-    success: true,
-    data: showtimes,
-  })
-})
-catalogueRouter.get('/catalogue', catalogueController.getCatalogue)
+export function catalogueErrorHandler(error, request, response, next) {
+  if (!(error instanceof CatalogueError)) return next(error);
+  response.status(error.status).json({
+    success: false,
+    error: { code: error.code, message: error.message },
+  });
+}

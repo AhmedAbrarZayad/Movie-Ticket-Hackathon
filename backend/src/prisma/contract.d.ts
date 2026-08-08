@@ -30,9 +30,9 @@ import type {
 } from '@prisma/orm-postgres/contract/types';
 
 export type StorageHash =
-  StorageHashBase<'270ef91e8e20a701ed216888fcbc191391964feb14982c0a9a41c4016fc4ec0d'>;
+  StorageHashBase<'a0546c627d67f11a0e3db20f7658b863f1ec03b48a8ee28a19db3b089a01d195'>;
 export type ExecutionHash =
-  ExecutionHashBase<'88dfd6b8c19fa294daf0c9959d120f43356a674b5ed520720c68f46b2688a4aa'>;
+  ExecutionHashBase<'6bd9950b80cef1f2335da5d0885dd9fac9bfad452693a9c93cef2c0dfc8819ee'>;
 export type ProfileHash =
   ProfileHashBase<'3916f444a8a17ad749191acf9e08dad97d1a327b88c2f1d45d12f240296aa8b2'>;
 
@@ -151,6 +151,8 @@ export type FieldOutputTypes = {
       readonly bookingRef: CodecTypes['pg/text@1']['output'];
       readonly userId: Char<36>;
       readonly showtimeId: Char<36>;
+      readonly holdId: Char<36> | null;
+      readonly otpVerifiedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly totalAmountCents: CodecTypes['pg/int4@1']['output'];
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
@@ -159,12 +161,16 @@ export type FieldOutputTypes = {
     };
     readonly Movie: {
       readonly id: Char<36>;
+      readonly slug: CodecTypes['pg/text@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly posterUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly backdropUrl: CodecTypes['pg/text@1']['output'] | null;
+      readonly trailerUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly durationMinutes: CodecTypes['pg/int4@1']['output'];
       readonly genre: CodecTypes['pg/text@1']['output'];
       readonly rating: CodecTypes['pg/text@1']['output'] | null;
+      readonly status: CodecTypes['pg/text@1']['output'];
       readonly releaseDate: CodecTypes['pg/timestamptz@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -173,6 +179,7 @@ export type FieldOutputTypes = {
       readonly id: Char<36>;
       readonly bookingId: Char<36>;
       readonly gatewayPaymentId: CodecTypes['pg/text@1']['output'] | null;
+      readonly chargeStartedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly amountCents: CodecTypes['pg/int4@1']['output'];
       readonly currency: CodecTypes['pg/text@1']['output'];
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -197,6 +204,15 @@ export type FieldOutputTypes = {
       readonly seatLabel: CodecTypes['pg/text@1']['output'];
       readonly seatType: CodecTypes['pg/text@1']['output'];
     };
+    readonly SeatHold: {
+      readonly id: Char<36>;
+      readonly userId: Char<36>;
+      readonly showtimeId: Char<36>;
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+    };
     readonly Showtime: {
       readonly id: Char<36>;
       readonly movieId: Char<36>;
@@ -215,6 +231,7 @@ export type FieldOutputTypes = {
       readonly seatId: Char<36>;
       readonly status: CodecTypes['pg/text@1']['output'];
       readonly heldBy: Char<36> | null;
+      readonly holdId: Char<36> | null;
       readonly holdExpiresAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly bookingId: Char<36> | null;
       readonly version: CodecTypes['pg/int4@1']['output'];
@@ -255,6 +272,8 @@ export type FieldInputTypes = {
       readonly bookingRef: CodecTypes['pg/text@1']['input'];
       readonly userId: CodecTypes['sql/char@1']['input'];
       readonly showtimeId: CodecTypes['sql/char@1']['input'];
+      readonly holdId: CodecTypes['sql/char@1']['input'] | null;
+      readonly otpVerifiedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly totalAmountCents: CodecTypes['pg/int4@1']['input'];
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
@@ -263,12 +282,16 @@ export type FieldInputTypes = {
     };
     readonly Movie: {
       readonly id: CodecTypes['sql/char@1']['input'];
+      readonly slug: CodecTypes['pg/text@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly posterUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly backdropUrl: CodecTypes['pg/text@1']['input'] | null;
+      readonly trailerUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly durationMinutes: CodecTypes['pg/int4@1']['input'];
       readonly genre: CodecTypes['pg/text@1']['input'];
       readonly rating: CodecTypes['pg/text@1']['input'] | null;
+      readonly status: CodecTypes['pg/text@1']['input'];
       readonly releaseDate: CodecTypes['pg/timestamptz@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -277,6 +300,7 @@ export type FieldInputTypes = {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly bookingId: CodecTypes['sql/char@1']['input'];
       readonly gatewayPaymentId: CodecTypes['pg/text@1']['input'] | null;
+      readonly chargeStartedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly amountCents: CodecTypes['pg/int4@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -301,6 +325,15 @@ export type FieldInputTypes = {
       readonly seatLabel: CodecTypes['pg/text@1']['input'];
       readonly seatType: CodecTypes['pg/text@1']['input'];
     };
+    readonly SeatHold: {
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+      readonly showtimeId: CodecTypes['sql/char@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+    };
     readonly Showtime: {
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly movieId: CodecTypes['sql/char@1']['input'];
@@ -319,6 +352,7 @@ export type FieldInputTypes = {
       readonly seatId: CodecTypes['sql/char@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
       readonly heldBy: CodecTypes['sql/char@1']['input'] | null;
+      readonly holdId: CodecTypes['sql/char@1']['input'] | null;
       readonly holdExpiresAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly bookingId: CodecTypes['sql/char@1']['input'] | null;
       readonly version: CodecTypes['pg/int4@1']['input'];
@@ -357,7 +391,9 @@ export type StorageColumnTypes = {
     readonly Booking: {
       readonly bookingRef: CodecTypes['pg/text@1']['output'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly holdId: Char<36> | null;
       readonly id: Char<36>;
+      readonly otpVerifiedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly seatCount: CodecTypes['pg/int4@1']['output'];
       readonly showtimeId: Char<36>;
       readonly status: CodecTypes['pg/text@1']['output'];
@@ -366,6 +402,7 @@ export type StorageColumnTypes = {
       readonly userId: Char<36>;
     };
     readonly Movie: {
+      readonly backdropUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly description: CodecTypes['pg/text@1']['output'] | null;
       readonly durationMinutes: CodecTypes['pg/int4@1']['output'];
@@ -374,12 +411,16 @@ export type StorageColumnTypes = {
       readonly posterUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly rating: CodecTypes['pg/text@1']['output'] | null;
       readonly releaseDate: CodecTypes['pg/timestamptz@1']['output'];
+      readonly slug: CodecTypes['pg/text@1']['output'];
+      readonly status: CodecTypes['pg/text@1']['output'];
       readonly title: CodecTypes['pg/text@1']['output'];
+      readonly trailerUrl: CodecTypes['pg/text@1']['output'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
     };
     readonly Payment: {
       readonly amountCents: CodecTypes['pg/int4@1']['output'];
       readonly bookingId: Char<36>;
+      readonly chargeStartedAt: CodecTypes['pg/timestamptz@1']['output'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly currency: CodecTypes['pg/text@1']['output'];
       readonly gatewayPaymentId: CodecTypes['pg/text@1']['output'] | null;
@@ -405,6 +446,15 @@ export type StorageColumnTypes = {
       readonly seatType: CodecTypes['pg/text@1']['output'];
       readonly theatreId: Char<36>;
     };
+    readonly SeatHold: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly expiresAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly id: Char<36>;
+      readonly showtimeId: Char<36>;
+      readonly status: CodecTypes['pg/text@1']['output'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['output'];
+      readonly userId: Char<36>;
+    };
     readonly Showtime: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly endsAt: CodecTypes['pg/timestamptz@1']['output'];
@@ -422,6 +472,7 @@ export type StorageColumnTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['output'];
       readonly heldBy: Char<36> | null;
       readonly holdExpiresAt: CodecTypes['pg/timestamptz@1']['output'] | null;
+      readonly holdId: Char<36> | null;
       readonly id: Char<36>;
       readonly seatId: Char<36>;
       readonly showtimeId: Char<36>;
@@ -461,7 +512,9 @@ export type StorageColumnInputTypes = {
     readonly Booking: {
       readonly bookingRef: CodecTypes['pg/text@1']['input'];
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly holdId: CodecTypes['sql/char@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
+      readonly otpVerifiedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly seatCount: CodecTypes['pg/int4@1']['input'];
       readonly showtimeId: CodecTypes['sql/char@1']['input'];
       readonly status: CodecTypes['pg/text@1']['input'];
@@ -470,6 +523,7 @@ export type StorageColumnInputTypes = {
       readonly userId: CodecTypes['sql/char@1']['input'];
     };
     readonly Movie: {
+      readonly backdropUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly description: CodecTypes['pg/text@1']['input'] | null;
       readonly durationMinutes: CodecTypes['pg/int4@1']['input'];
@@ -478,12 +532,16 @@ export type StorageColumnInputTypes = {
       readonly posterUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly rating: CodecTypes['pg/text@1']['input'] | null;
       readonly releaseDate: CodecTypes['pg/timestamptz@1']['input'];
+      readonly slug: CodecTypes['pg/text@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
       readonly title: CodecTypes['pg/text@1']['input'];
+      readonly trailerUrl: CodecTypes['pg/text@1']['input'] | null;
       readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
     };
     readonly Payment: {
       readonly amountCents: CodecTypes['pg/int4@1']['input'];
       readonly bookingId: CodecTypes['sql/char@1']['input'];
+      readonly chargeStartedAt: CodecTypes['pg/timestamptz@1']['input'] | null;
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly currency: CodecTypes['pg/text@1']['input'];
       readonly gatewayPaymentId: CodecTypes['pg/text@1']['input'] | null;
@@ -509,6 +567,15 @@ export type StorageColumnInputTypes = {
       readonly seatType: CodecTypes['pg/text@1']['input'];
       readonly theatreId: CodecTypes['sql/char@1']['input'];
     };
+    readonly SeatHold: {
+      readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly expiresAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly id: CodecTypes['sql/char@1']['input'];
+      readonly showtimeId: CodecTypes['sql/char@1']['input'];
+      readonly status: CodecTypes['pg/text@1']['input'];
+      readonly updatedAt: CodecTypes['pg/timestamptz@1']['input'];
+      readonly userId: CodecTypes['sql/char@1']['input'];
+    };
     readonly Showtime: {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly endsAt: CodecTypes['pg/timestamptz@1']['input'];
@@ -526,6 +593,7 @@ export type StorageColumnInputTypes = {
       readonly createdAt: CodecTypes['pg/timestamptz@1']['input'];
       readonly heldBy: CodecTypes['sql/char@1']['input'] | null;
       readonly holdExpiresAt: CodecTypes['pg/timestamptz@1']['input'] | null;
+      readonly holdId: CodecTypes['sql/char@1']['input'] | null;
       readonly id: CodecTypes['sql/char@1']['input'];
       readonly seatId: CodecTypes['sql/char@1']['input'];
       readonly showtimeId: CodecTypes['sql/char@1']['input'];
@@ -603,6 +671,17 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly typeParams: { readonly length: 36 };
                 };
+                readonly holdId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly otpVerifiedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: true;
+                };
                 readonly status: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -647,6 +726,11 @@ type ContractBase = Omit<
                   readonly nullable: false;
                   readonly typeParams: { readonly length: 36 };
                 };
+                readonly slug: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
                 readonly title: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
@@ -658,6 +742,16 @@ type ContractBase = Omit<
                   readonly nullable: true;
                 };
                 readonly posterUrl: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly backdropUrl: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly trailerUrl: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
@@ -677,6 +771,11 @@ type ContractBase = Omit<
                   readonly codecId: 'pg/text@1';
                   readonly nullable: true;
                 };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                };
                 readonly releaseDate: {
                   readonly nativeType: 'timestamptz';
                   readonly codecId: 'pg/timestamptz@1';
@@ -695,7 +794,7 @@ type ContractBase = Omit<
                 };
               };
               primaryKey: { readonly columns: readonly ['id'] };
-              uniques: readonly [];
+              uniques: readonly [{ readonly columns: readonly ['slug'] }];
               indexes: readonly [];
               foreignKeys: readonly [];
             };
@@ -716,6 +815,11 @@ type ContractBase = Omit<
                 readonly gatewayPaymentId: {
                   readonly nativeType: 'text';
                   readonly codecId: 'pg/text@1';
+                  readonly nullable: true;
+                };
+                readonly chargeStartedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
                   readonly nullable: true;
                 };
                 readonly amountCents: {
@@ -853,6 +957,57 @@ type ContractBase = Omit<
               indexes: readonly [];
               foreignKeys: readonly [];
             };
+            readonly SeatHold: {
+              columns: {
+                readonly id: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly userId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly showtimeId: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: false;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly status: {
+                  readonly nativeType: 'text';
+                  readonly codecId: 'pg/text@1';
+                  readonly nullable: false;
+                  readonly default: {
+                    readonly kind: 'literal';
+                    readonly value: DefaultLiteralValue<'pg/text@1', 'ACTIVE'>;
+                  };
+                };
+                readonly expiresAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+                readonly createdAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                  readonly default: { readonly kind: 'function'; readonly expression: 'now()' };
+                };
+                readonly updatedAt: {
+                  readonly nativeType: 'timestamptz';
+                  readonly codecId: 'pg/timestamptz@1';
+                  readonly nullable: false;
+                };
+              };
+              primaryKey: { readonly columns: readonly ['id'] };
+              uniques: readonly [];
+              indexes: readonly [];
+              foreignKeys: readonly [];
+            };
             readonly Showtime: {
               columns: {
                 readonly id: {
@@ -945,6 +1100,12 @@ type ContractBase = Omit<
                   };
                 };
                 readonly heldBy: {
+                  readonly nativeType: 'character';
+                  readonly codecId: 'sql/char@1';
+                  readonly nullable: true;
+                  readonly typeParams: { readonly length: 36 };
+                };
+                readonly holdId: {
                   readonly nativeType: 'character';
                   readonly codecId: 'sql/char@1';
                   readonly nullable: true;
@@ -1136,6 +1297,7 @@ type ContractBase = Omit<
       readonly model: 'ShowtimeSeat';
     };
     readonly Booking: { readonly namespace: 'public' & NamespaceId; readonly model: 'Booking' };
+    readonly SeatHold: { readonly namespace: 'public' & NamespaceId; readonly model: 'SeatHold' };
     readonly Payment: { readonly namespace: 'public' & NamespaceId; readonly model: 'Payment' };
     readonly WebhookEvent: {
       readonly namespace: 'public' & NamespaceId;
@@ -1175,6 +1337,18 @@ type ContractBase = Omit<
                   readonly codecId: 'sql/char@1';
                   readonly typeParams: { readonly length: 36 };
                 };
+              };
+              readonly holdId: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly otpVerifiedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
               };
               readonly status: {
                 readonly nullable: false;
@@ -1239,6 +1413,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['bookingId'];
                 };
               };
+              readonly hold: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'SeatHold';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['holdId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'Booking';
@@ -1248,6 +1433,8 @@ type ContractBase = Omit<
                 readonly bookingRef: { readonly column: 'bookingRef' };
                 readonly userId: { readonly column: 'userId' };
                 readonly showtimeId: { readonly column: 'showtimeId' };
+                readonly holdId: { readonly column: 'holdId' };
+                readonly otpVerifiedAt: { readonly column: 'otpVerifiedAt' };
                 readonly status: { readonly column: 'status' };
                 readonly totalAmountCents: { readonly column: 'totalAmountCents' };
                 readonly seatCount: { readonly column: 'seatCount' };
@@ -1266,6 +1453,10 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
+              readonly slug: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
               readonly title: {
                 readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
@@ -1275,6 +1466,14 @@ type ContractBase = Omit<
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly posterUrl: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly backdropUrl: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly trailerUrl: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
@@ -1288,6 +1487,10 @@ type ContractBase = Omit<
               };
               readonly rating: {
                 readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly status: {
+                readonly nullable: false;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
               };
               readonly releaseDate: {
@@ -1321,12 +1524,16 @@ type ContractBase = Omit<
               readonly namespaceId: 'public';
               readonly fields: {
                 readonly id: { readonly column: 'id' };
+                readonly slug: { readonly column: 'slug' };
                 readonly title: { readonly column: 'title' };
                 readonly description: { readonly column: 'description' };
                 readonly posterUrl: { readonly column: 'posterUrl' };
+                readonly backdropUrl: { readonly column: 'backdropUrl' };
+                readonly trailerUrl: { readonly column: 'trailerUrl' };
                 readonly durationMinutes: { readonly column: 'durationMinutes' };
                 readonly genre: { readonly column: 'genre' };
                 readonly rating: { readonly column: 'rating' };
+                readonly status: { readonly column: 'status' };
                 readonly releaseDate: { readonly column: 'releaseDate' };
                 readonly createdAt: { readonly column: 'createdAt' };
                 readonly updatedAt: { readonly column: 'updatedAt' };
@@ -1354,6 +1561,10 @@ type ContractBase = Omit<
               readonly gatewayPaymentId: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly chargeStartedAt: {
+                readonly nullable: true;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
               };
               readonly amountCents: {
                 readonly nullable: false;
@@ -1396,6 +1607,7 @@ type ContractBase = Omit<
                 readonly id: { readonly column: 'id' };
                 readonly bookingId: { readonly column: 'bookingId' };
                 readonly gatewayPaymentId: { readonly column: 'gatewayPaymentId' };
+                readonly chargeStartedAt: { readonly column: 'chargeStartedAt' };
                 readonly amountCents: { readonly column: 'amountCents' };
                 readonly currency: { readonly column: 'currency' };
                 readonly status: { readonly column: 'status' };
@@ -1541,6 +1753,106 @@ type ContractBase = Omit<
                 readonly col: { readonly column: 'col' };
                 readonly seatLabel: { readonly column: 'seatLabel' };
                 readonly seatType: { readonly column: 'seatType' };
+              };
+            };
+          };
+          readonly SeatHold: {
+            readonly fields: {
+              readonly id: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly userId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly showtimeId: {
+                readonly nullable: false;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
+              readonly status: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/text@1' };
+              };
+              readonly expiresAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly createdAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+              readonly updatedAt: {
+                readonly nullable: false;
+                readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
+              };
+            };
+            readonly relations: {
+              readonly user: {
+                readonly to: { readonly namespace: 'public' & NamespaceId; readonly model: 'User' };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['userId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly showtime: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Showtime';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['showtimeId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
+              readonly seats: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'ShowtimeSeat';
+                };
+                readonly cardinality: '1:N';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['holdId'];
+                };
+              };
+              readonly booking: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'Booking';
+                };
+                readonly cardinality: '1:1';
+                readonly on: {
+                  readonly localFields: readonly ['id'];
+                  readonly targetFields: readonly ['holdId'];
+                };
+              };
+            };
+            readonly storage: {
+              readonly table: 'SeatHold';
+              readonly namespaceId: 'public';
+              readonly fields: {
+                readonly id: { readonly column: 'id' };
+                readonly userId: { readonly column: 'userId' };
+                readonly showtimeId: { readonly column: 'showtimeId' };
+                readonly status: { readonly column: 'status' };
+                readonly expiresAt: { readonly column: 'expiresAt' };
+                readonly createdAt: { readonly column: 'createdAt' };
+                readonly updatedAt: { readonly column: 'updatedAt' };
               };
             };
           };
@@ -1700,6 +2012,14 @@ type ContractBase = Omit<
                   readonly typeParams: { readonly length: 36 };
                 };
               };
+              readonly holdId: {
+                readonly nullable: true;
+                readonly type: {
+                  readonly kind: 'scalar';
+                  readonly codecId: 'sql/char@1';
+                  readonly typeParams: { readonly length: 36 };
+                };
+              };
               readonly holdExpiresAt: {
                 readonly nullable: true;
                 readonly type: { readonly kind: 'scalar'; readonly codecId: 'pg/timestamptz@1' };
@@ -1764,6 +2084,17 @@ type ContractBase = Omit<
                   readonly targetFields: readonly ['id'];
                 };
               };
+              readonly hold: {
+                readonly to: {
+                  readonly namespace: 'public' & NamespaceId;
+                  readonly model: 'SeatHold';
+                };
+                readonly cardinality: 'N:1';
+                readonly on: {
+                  readonly localFields: readonly ['holdId'];
+                  readonly targetFields: readonly ['id'];
+                };
+              };
             };
             readonly storage: {
               readonly table: 'ShowtimeSeat';
@@ -1774,6 +2105,7 @@ type ContractBase = Omit<
                 readonly seatId: { readonly column: 'seatId' };
                 readonly status: { readonly column: 'status' };
                 readonly heldBy: { readonly column: 'heldBy' };
+                readonly holdId: { readonly column: 'holdId' };
                 readonly holdExpiresAt: { readonly column: 'holdExpiresAt' };
                 readonly bookingId: { readonly column: 'bookingId' };
                 readonly version: { readonly column: 'version' };
@@ -2077,6 +2409,23 @@ type ContractBase = Omit<
             readonly column: 'id';
           };
           readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'SeatHold';
+            readonly column: 'id';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'uuidv7' };
+        },
+        {
+          readonly ref: {
+            readonly namespace: 'public';
+            readonly table: 'SeatHold';
+            readonly column: 'updatedAt';
+          };
+          readonly onCreate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
+          readonly onUpdate: { readonly kind: 'generator'; readonly id: 'timestampNow' };
         },
         {
           readonly ref: {

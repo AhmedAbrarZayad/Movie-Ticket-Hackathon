@@ -1,25 +1,28 @@
-import { useMemo } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { SeatMap } from '../../features/booking/components/seat-map'
 import { SeatSummary } from '../../features/booking/components/seat-summary'
 import { useSeatAvailability } from '../../features/booking/hooks/use-seat-availability'
 import { routes } from '../../config/routes'
-import { movies } from '../../features/movies'
+import { useMovieDetails } from '../../features/movies/hooks/use-movie-details'
 
 export function BookingRoute() {
   const { movieId } = useParams()
   const navigate = useNavigate()
+  const [searchParams] = useSearchParams()
+  const showtimeId = searchParams.get('showtimeId')
   const booking = useSeatAvailability()
+  const details = useMovieDetails(movieId)
 
-  const selectedMovie = useMemo(() => {
-    return movies.find((movie) => movie.id === movieId) ?? movies[0]
-  }, [movieId])
+  if (details.isLoading) return <main className="cinema-bg flex min-h-screen items-center justify-center text-[var(--muted)]">Loading booking…</main>
+  if (!details.movie) return <main className="cinema-bg flex min-h-screen items-center justify-center text-red-200">{details.error || 'Movie not found.'}</main>
+  const selectedMovie = details.movie
 
   function handleProceedToPayment() {
     navigate(routes.payment.replace(':movieId', selectedMovie.id), {
       state: {
         seats: booking.selectedSeats.map((seat) => seat.id),
         total: booking.total,
+        showtimeId,
       },
     })
   }

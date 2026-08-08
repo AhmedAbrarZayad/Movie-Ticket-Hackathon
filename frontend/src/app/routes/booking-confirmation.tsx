@@ -1,8 +1,7 @@
-import { useMemo } from 'react'
 import { Link, useLocation, useParams } from 'react-router-dom'
 import { routes } from '../../config/routes'
 import { useCreateBooking } from '../../features/booking/hooks/use-create-booking'
-import { movies } from '../../features/movies'
+import { useMovieDetails } from '../../features/movies/hooks/use-movie-details'
 
 interface ConfirmationLocationState {
   seats?: string[]
@@ -14,14 +13,16 @@ export function BookingConfirmationRoute() {
   const location = useLocation()
   const state = (location.state as ConfirmationLocationState | null) ?? null
 
-  const selectedMovie = useMemo(() => {
-    return movies.find((movie) => movie.id === movieId) ?? movies[0]
-  }, [movieId])
+  const details = useMovieDetails(movieId)
 
   const seats = state?.seats?.length ? state.seats.join(', ') : 'F12'
   const total = state?.total ?? 17.5
 
   const { bookingReference, confettiPieces } = useCreateBooking()
+
+  if (details.isLoading) return <main className="cinema-bg flex min-h-screen items-center justify-center text-[var(--muted)]">Loading booking…</main>
+  if (!details.movie) return <main className="cinema-bg flex min-h-screen items-center justify-center text-red-200">{details.error || 'Movie not found.'}</main>
+  const selectedMovie = details.movie
 
   return (
     <main className="cinema-bg relative min-h-screen overflow-x-hidden">

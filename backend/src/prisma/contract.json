@@ -24,6 +24,10 @@
       "model": "Seat",
       "namespace": "public"
     },
+    "SeatHold": {
+      "model": "SeatHold",
+      "namespace": "public"
+    },
     "Showtime": {
       "model": "Showtime",
       "namespace": "public"
@@ -65,6 +69,16 @@
                   "kind": "scalar"
                 }
               },
+              "holdId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -73,6 +87,13 @@
                   "typeParams": {
                     "length": 36
                   }
+                }
+              },
+              "otpVerifiedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
                 }
               },
               "seatCount": {
@@ -125,6 +146,21 @@
               }
             },
             "relations": {
+              "hold": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "holdId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "SeatHold",
+                  "namespace": "public"
+                }
+              },
               "payments": {
                 "cardinality": "1:N",
                 "on": {
@@ -194,8 +230,14 @@
                 "createdAt": {
                   "column": "createdAt"
                 },
+                "holdId": {
+                  "column": "holdId"
+                },
                 "id": {
                   "column": "id"
+                },
+                "otpVerifiedAt": {
+                  "column": "otpVerifiedAt"
                 },
                 "seatCount": {
                   "column": "seatCount"
@@ -222,6 +264,13 @@
           },
           "Movie": {
             "fields": {
+              "backdropUrl": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "createdAt": {
                 "nullable": false,
                 "type": {
@@ -281,8 +330,29 @@
                   "kind": "scalar"
                 }
               },
+              "slug": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
               "title": {
                 "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "trailerUrl": {
+                "nullable": true,
                 "type": {
                   "codecId": "pg/text@1",
                   "kind": "scalar"
@@ -315,6 +385,9 @@
             },
             "storage": {
               "fields": {
+                "backdropUrl": {
+                  "column": "backdropUrl"
+                },
                 "createdAt": {
                   "column": "createdAt"
                 },
@@ -339,8 +412,17 @@
                 "releaseDate": {
                   "column": "releaseDate"
                 },
+                "slug": {
+                  "column": "slug"
+                },
+                "status": {
+                  "column": "status"
+                },
                 "title": {
                   "column": "title"
+                },
+                "trailerUrl": {
+                  "column": "trailerUrl"
                 },
                 "updatedAt": {
                   "column": "updatedAt"
@@ -367,6 +449,13 @@
                   "typeParams": {
                     "length": 36
                   }
+                }
+              },
+              "chargeStartedAt": {
+                "nullable": true,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
                 }
               },
               "createdAt": {
@@ -439,6 +528,9 @@
                 },
                 "bookingId": {
                   "column": "bookingId"
+                },
+                "chargeStartedAt": {
+                  "column": "chargeStartedAt"
                 },
                 "createdAt": {
                   "column": "createdAt"
@@ -684,6 +776,157 @@
               "table": "Seat"
             }
           },
+          "SeatHold": {
+            "fields": {
+              "createdAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "expiresAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "id": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "showtimeId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "status": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/text@1",
+                  "kind": "scalar"
+                }
+              },
+              "updatedAt": {
+                "nullable": false,
+                "type": {
+                  "codecId": "pg/timestamptz@1",
+                  "kind": "scalar"
+                }
+              },
+              "userId": {
+                "nullable": false,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              }
+            },
+            "relations": {
+              "booking": {
+                "cardinality": "1:1",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "holdId"
+                  ]
+                },
+                "to": {
+                  "model": "Booking",
+                  "namespace": "public"
+                }
+              },
+              "seats": {
+                "cardinality": "1:N",
+                "on": {
+                  "localFields": [
+                    "id"
+                  ],
+                  "targetFields": [
+                    "holdId"
+                  ]
+                },
+                "to": {
+                  "model": "ShowtimeSeat",
+                  "namespace": "public"
+                }
+              },
+              "showtime": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "showtimeId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "Showtime",
+                  "namespace": "public"
+                }
+              },
+              "user": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "userId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "User",
+                  "namespace": "public"
+                }
+              }
+            },
+            "storage": {
+              "fields": {
+                "createdAt": {
+                  "column": "createdAt"
+                },
+                "expiresAt": {
+                  "column": "expiresAt"
+                },
+                "id": {
+                  "column": "id"
+                },
+                "showtimeId": {
+                  "column": "showtimeId"
+                },
+                "status": {
+                  "column": "status"
+                },
+                "updatedAt": {
+                  "column": "updatedAt"
+                },
+                "userId": {
+                  "column": "userId"
+                }
+              },
+              "namespaceId": "public",
+              "table": "SeatHold"
+            }
+          },
           "Showtime": {
             "fields": {
               "createdAt": {
@@ -901,6 +1144,16 @@
                   "kind": "scalar"
                 }
               },
+              "holdId": {
+                "nullable": true,
+                "type": {
+                  "codecId": "sql/char@1",
+                  "kind": "scalar",
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
               "id": {
                 "nullable": false,
                 "type": {
@@ -969,6 +1222,21 @@
                   "namespace": "public"
                 }
               },
+              "hold": {
+                "cardinality": "N:1",
+                "on": {
+                  "localFields": [
+                    "holdId"
+                  ],
+                  "targetFields": [
+                    "id"
+                  ]
+                },
+                "to": {
+                  "model": "SeatHold",
+                  "namespace": "public"
+                }
+              },
               "holder": {
                 "cardinality": "N:1",
                 "on": {
@@ -1028,6 +1296,9 @@
                 },
                 "holdExpiresAt": {
                   "column": "holdExpiresAt"
+                },
+                "holdId": {
+                  "column": "holdId"
                 },
                 "id": {
                   "column": "id"
@@ -1386,6 +1657,14 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
+                "holdId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
                 "id": {
                   "codecId": "sql/char@1",
                   "nativeType": "character",
@@ -1393,6 +1672,11 @@
                   "typeParams": {
                     "length": 36
                   }
+                },
+                "otpVerifiedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 },
                 "seatCount": {
                   "codecId": "pg/int4@1",
@@ -1452,6 +1736,11 @@
             },
             "Movie": {
               "columns": {
+                "backdropUrl": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
+                },
                 "createdAt": {
                   "codecId": "pg/timestamptz@1",
                   "default": {
@@ -1499,10 +1788,25 @@
                   "nativeType": "timestamptz",
                   "nullable": false
                 },
+                "slug": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": false
+                },
                 "title": {
                   "codecId": "pg/text@1",
                   "nativeType": "text",
                   "nullable": false
+                },
+                "trailerUrl": {
+                  "codecId": "pg/text@1",
+                  "nativeType": "text",
+                  "nullable": true
                 },
                 "updatedAt": {
                   "codecId": "pg/timestamptz@1",
@@ -1517,7 +1821,13 @@
                   "id"
                 ]
               },
-              "uniques": []
+              "uniques": [
+                {
+                  "columns": [
+                    "slug"
+                  ]
+                }
+              ]
             },
             "Payment": {
               "columns": {
@@ -1533,6 +1843,11 @@
                   "typeParams": {
                     "length": 36
                   }
+                },
+                "chargeStartedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": true
                 },
                 "createdAt": {
                   "codecId": "pg/timestamptz@1",
@@ -1709,6 +2024,70 @@
               },
               "uniques": []
             },
+            "SeatHold": {
+              "columns": {
+                "createdAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "default": {
+                    "expression": "now()",
+                    "kind": "function"
+                  },
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "expiresAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "id": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "showtimeId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                },
+                "status": {
+                  "codecId": "pg/text@1",
+                  "default": {
+                    "kind": "literal",
+                    "value": "ACTIVE"
+                  },
+                  "nativeType": "text",
+                  "nullable": false
+                },
+                "updatedAt": {
+                  "codecId": "pg/timestamptz@1",
+                  "nativeType": "timestamptz",
+                  "nullable": false
+                },
+                "userId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": false,
+                  "typeParams": {
+                    "length": 36
+                  }
+                }
+              },
+              "foreignKeys": [],
+              "indexes": [],
+              "primaryKey": {
+                "columns": [
+                  "id"
+                ]
+              },
+              "uniques": []
+            },
             "Showtime": {
               "columns": {
                 "createdAt": {
@@ -1815,6 +2194,14 @@
                   "codecId": "pg/timestamptz@1",
                   "nativeType": "timestamptz",
                   "nullable": true
+                },
+                "holdId": {
+                  "codecId": "sql/char@1",
+                  "nativeType": "character",
+                  "nullable": true,
+                  "typeParams": {
+                    "length": 36
+                  }
                 },
                 "id": {
                   "codecId": "sql/char@1",
@@ -2039,10 +2426,10 @@
         "kind": "postgres-schema"
       }
     },
-    "storageHash": "270ef91e8e20a701ed216888fcbc191391964feb14982c0a9a41c4016fc4ec0d"
+    "storageHash": "a0546c627d67f11a0e3db20f7658b863f1ec03b48a8ee28a19db3b089a01d195"
   },
   "execution": {
-    "executionHash": "88dfd6b8c19fa294daf0c9959d120f43356a674b5ed520720c68f46b2688a4aa",
+    "executionHash": "6bd9950b80cef1f2335da5d0885dd9fac9bfad452693a9c93cef2c0dfc8819ee",
     "mutations": {
       "defaults": [
         {
@@ -2158,6 +2545,32 @@
             "column": "id",
             "namespace": "public",
             "table": "Seat"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "uuidv7",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "id",
+            "namespace": "public",
+            "table": "SeatHold"
+          }
+        },
+        {
+          "onCreate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "onUpdate": {
+            "id": "timestampNow",
+            "kind": "generator"
+          },
+          "ref": {
+            "column": "updatedAt",
+            "namespace": "public",
+            "table": "SeatHold"
           }
         },
         {

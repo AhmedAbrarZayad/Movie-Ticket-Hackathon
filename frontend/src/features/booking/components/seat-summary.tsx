@@ -32,7 +32,7 @@ export function SeatSummary({
           <img
             alt={`${movie.title} poster`}
             className="h-28 w-20 rounded-lg border border-white/10 object-cover shadow-md"
-            src={movie.posterUrl}
+            src={movie.posterUrl ?? undefined}
           />
           <div className="flex flex-col justify-center">
             <h2 className="mb-1 text-2xl font-semibold text-[var(--text-title)]">{movie.title}</h2>
@@ -111,4 +111,3 @@ export function SeatSummary({
     </aside>
   )
 }
-

@@ -1,7 +1,7 @@
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import { routes } from '../../config/routes'
-import { movies } from '../../features/movies'
+import { useMovieDetails } from '../../features/movies/hooks/use-movie-details'
 import { PaymentForm } from '../../features/payments/components/payment-form'
 import { PaymentStatus } from '../../features/payments/components/payment-status'
 import { usePayment } from '../../features/payments/hooks/use-payment'
@@ -17,16 +17,14 @@ export function PaymentRoute() {
   const location = useLocation()
   const state = (location.state as PaymentLocationState | null) ?? null
 
-  const selectedMovie = useMemo(() => {
-    return movies.find((movie) => movie.id === movieId) ?? movies[0]
-  }, [movieId])
+  const details = useMovieDetails(movieId)
 
   const selectedSeats = state?.seats?.length ? state.seats : ['F12']
   const ticketTotal = state?.total ?? 17.5
 
   const payment = usePayment(() => {
     window.setTimeout(() => {
-      navigate(routes.bookingConfirmation.replace(':movieId', selectedMovie.id), {
+      navigate(routes.bookingConfirmation.replace(':movieId', movieId ?? ''), {
         state: {
           seats: selectedSeats,
           total: ticketTotal,
@@ -38,6 +36,10 @@ export function PaymentRoute() {
   useEffect(() => {
     window.scrollTo(0, 0)
   }, [])
+
+  if (details.isLoading) return <main className="cinema-bg flex min-h-screen items-center justify-center text-[var(--muted)]">Loading payment…</main>
+  if (!details.movie) return <main className="cinema-bg flex min-h-screen items-center justify-center text-red-200">{details.error || 'Movie not found.'}</main>
+  const selectedMovie = details.movie
 
   return (
     <main
@@ -51,7 +53,7 @@ export function PaymentRoute() {
         <section className="relative h-64 w-full md:h-auto md:w-2/5">
           <img
             className="absolute inset-0 h-full w-full object-cover opacity-80 mix-blend-overlay"
-            src={selectedMovie.posterUrl}
+            src={selectedMovie.posterUrl ?? undefined}
             alt={`${selectedMovie.title} poster`}
           />
           <div className="absolute inset-0 bg-gradient-to-t from-[var(--surface)] to-transparent md:bg-gradient-to-r md:to-[var(--surface)]/50" />

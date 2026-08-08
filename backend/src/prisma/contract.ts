@@ -44,13 +44,16 @@ export const contract = defineContract(
       Movie: model('Movie', {
         fields: {
           id: field.id.uuidv7String(),
+          slug: field.text().unique(),
           title: field.text(),
           description: field.text().optional(),
           posterUrl: field.text().optional(),
+          backdropUrl: field.text().optional(),
           trailerUrl: field.text().optional(),
           durationMinutes: field.int(),
           genre: field.text(),
           rating: field.text().optional(),
+          status: field.text(),
           releaseDate: field.temporal.timestamptz(),
           createdAt: field.temporal.createdAt(),
           updatedAt: field.temporal.updatedAt(),
@@ -135,6 +138,7 @@ export const contract = defineContract(
           seatId: field.uuidString(),
           status: field.text().default('AVAILABLE'), // AVAILABLE | HELD | BOOKED
           heldBy: field.uuidString().optional(),     // userId who placed the hold
+          holdId: field.uuidString().optional(),
           holdExpiresAt: field.temporal.timestamptz().optional(), // lazy expiry check
           bookingId: field.uuidString().optional(),  // set after payment confirmed
           version: field.int().default(1),           // optimistic locking
@@ -146,6 +150,7 @@ export const contract = defineContract(
           seat: rel.belongsTo('Seat', { from: 'seatId', to: 'id' }),
           holder: rel.belongsTo('User', { from: 'heldBy', to: 'id' }),
           booking: rel.belongsTo('Booking', { from: 'bookingId', to: 'id' }),
+          hold: rel.belongsTo('SeatHold', { from: 'holdId', to: 'id' }),
         },
       }),
 
@@ -158,6 +163,8 @@ export const contract = defineContract(
           bookingRef: field.text().unique(),  // "BK-abc123" — sent to gateway
           userId: field.uuidString(),
           showtimeId: field.uuidString(),
+          holdId: field.uuidString().optional(),
+          otpVerifiedAt: field.temporal.timestamptz().optional(),
           status: field.text().default('PENDING'), // PENDING | CONFIRMED | CANCELLED | EXPIRED
           totalAmountCents: field.int(),     // sum of seat prices in integer cents
           seatCount: field.int(),            // denormalized for quick display
@@ -169,6 +176,21 @@ export const contract = defineContract(
           showtime: rel.belongsTo('Showtime', { from: 'showtimeId', to: 'id' }),
           seats: rel.hasMany('ShowtimeSeat', { by: 'bookingId' }),
           payments: rel.hasMany('Payment', { by: 'bookingId' }),
+          hold: rel.belongsTo('SeatHold', { from: 'holdId', to: 'id' }),
+        },
+      }),
+
+      SeatHold: model('SeatHold', {
+        fields: {
+          id: field.id.uuidv7String(), userId: field.uuidString(), showtimeId: field.uuidString(),
+          status: field.text().default('ACTIVE'), expiresAt: field.temporal.timestamptz(),
+          createdAt: field.temporal.createdAt(), updatedAt: field.temporal.updatedAt(),
+        },
+        relations: {
+          user: rel.belongsTo('User', { from: 'userId', to: 'id' }),
+          showtime: rel.belongsTo('Showtime', { from: 'showtimeId', to: 'id' }),
+          seats: rel.hasMany('ShowtimeSeat', { by: 'holdId' }),
+          booking: rel.hasOne('Booking', { by: 'holdId' }),
         },
       }),
 
@@ -180,6 +202,7 @@ export const contract = defineContract(
           id: field.id.uuidv7String(),
           bookingId: field.uuidString(),
           gatewayPaymentId: field.text().optional(), // from gateway /charge response
+          chargeStartedAt: field.temporal.timestamptz().optional(),
           amountCents: field.int(),
           currency: field.text().default('BDT'),
           status: field.text().default('PENDING'), // PENDING | SUCCEEDED | FAILED | REFUNDED

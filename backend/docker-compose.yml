@@ -18,6 +18,13 @@ services:
       CLOUDINARY_CLOUD_NAME: ${CLOUDINARY_CLOUD_NAME:-your_cloud_name}
       CLOUDINARY_API_KEY: ${CLOUDINARY_API_KEY:-your_api_key}
       CLOUDINARY_API_SECRET: ${CLOUDINARY_API_SECRET:-your_api_secret}
+      HOLD_TTL_SECONDS: ${HOLD_TTL_SECONDS:-300}
+      OTP_TTL_SECONDS: ${OTP_TTL_SECONDS:-300}
+      HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS:-5000}
+      GATEWAY_URL: http://gateway:9000
+      # Must be reachable from the gateway container; localhost would point at the gateway itself.
+      PUBLIC_API_URL: http://backend:3000
+      GATEWAY_SECRET: ${GATEWAY_SECRET:-z2p-2026-secret}
     ports:
       - "${API_PORT:-3000}:${PORT:-3000}"
     depends_on:
@@ -45,6 +52,8 @@ services:
     volumes:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -55,11 +64,41 @@ services:
     networks:
       - backend-network
 
+  worker:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: cinemaseat-backend:${IMAGE_TAG:-local}
+    command: ["sh", "-c", "npm run db:migrate && node worker.js"]
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-cinemaseat}:${POSTGRES_PASSWORD:-cinemaseat}@db:5432/${POSTGRES_DB:-cinemaseat}
+      REDIS_URL: redis://redis:6379
+      HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS:-5000}
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+    networks:
+      - backend-network
+
+  gateway:
+    image: asifmahmoud414/mock-gateway:latest
+    ports: ["${GATEWAY_PORT:-9000}:9000"]
+    environment:
+      GATEWAY_SECRET: ${GATEWAY_SECRET:-z2p-2026-secret}
+    restart: unless-stopped
+    networks:
+      - backend-network
+
   redis:
     image: redis:7-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - redis-data:/data
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
