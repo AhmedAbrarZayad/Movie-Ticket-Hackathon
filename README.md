@@ -1,11 +1,11 @@
 # CinemaSeat
 
-CinemaSeat is a concurrent movie-ticket booking system built with React, Express, PostgreSQL, Redis, BullMQ, and the supplied CinemaSeat payment/OTP gateway. PostgreSQL is authoritative; Redis absorbs contention and coordinates shared limits/jobs.
+CinemaSeat is a concurrent movie-ticket booking system built with React, Nginx, Express, PostgreSQL, Redis, BullMQ, and the supplied CinemaSeat payment/OTP gateway. PostgreSQL is authoritative; Redis absorbs contention and coordinates shared limits/jobs.
 
 ## Architecture
 
 ```text
-React client
+Nginx :8080 ── serves React SPA
     │ JWT + credentialed requests
     ▼
 Express API ───── catalogue/authentication/booking modules
@@ -17,7 +17,7 @@ Express API ───── catalogue/authentication/booking modules
     └── BullMQ worker ◄───────┘ webhook processing + expired-hold sweep
 ```
 
-Seat holds use Redis `SET NX EX` followed by PostgreSQL `SELECT … FOR UPDATE`. Webhooks are authenticated over their raw bytes, queued immediately, and processed idempotently by `event_id`. Payments use the booking reference as the gateway idempotency key.
+Nginx is the browser-facing entry point. It serves the SPA, applies security headers and forwards `/api`, `/public`, and `/health` to Express. Seat holds use Redis `SET NX EX` followed by PostgreSQL `SELECT … FOR UPDATE`. Webhooks enter through Nginx, are authenticated over their raw bytes, queued immediately, and processed idempotently by `event_id`.
 
 ## Run locally
 
@@ -34,9 +34,11 @@ The seed command is deliberately destructive. It resets all application rows and
 
 Services:
 
-- API: `http://localhost:3000`
+- Application and API gateway: `http://localhost:8080`
+- Direct backend diagnostics: `http://localhost:3000`
 - Gateway/debug API: `http://localhost:9000`
-- Health: `GET http://localhost:3000/health`
+- Proxied backend health: `GET http://localhost:8080/health`
+- Nginx health: `GET http://localhost:8080/nginx-health`
 
 Run the frontend separately with `cd frontend && npm ci && npm run dev`.
 
@@ -46,29 +48,29 @@ Register or log in and use the returned access token as `Authorization: Bearer T
 
 ```sh
 # Catalogue and showtimes
-curl http://localhost:3000/api/catalogue/movies
-curl "http://localhost:3000/api/catalogue/movies/MOVIE_ID/showtimes?date=2026-08-08"
+curl http://localhost:8080/api/catalogue/movies
+curl "http://localhost:8080/api/catalogue/movies/MOVIE_ID/showtimes?date=2026-08-08"
 
 # Public seat map — judging hook
-curl http://localhost:3000/api/showtimes/SHOWTIME_ID/seats
+curl http://localhost:8080/api/showtimes/SHOWTIME_ID/seats
 
 # Atomic hold — judging hook
-curl -X POST http://localhost:3000/api/showtimes/SHOWTIME_ID/holds \
+curl -X POST http://localhost:8080/api/showtimes/SHOWTIME_ID/holds \
   -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" \
   -d '{"seatIds":["SEAT_ID"]}'
 
 # Convert hold to booking
-curl -X POST http://localhost:3000/api/bookings \
+curl -X POST http://localhost:8080/api/bookings \
   -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" \
   -d '{"holdId":"HOLD_ID"}'
 
 # OTP then payment
-curl -X POST http://localhost:3000/api/bookings/BOOKING_ID/otp/send \
+curl -X POST http://localhost:8080/api/bookings/BOOKING_ID/otp/send \
   -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" \
   -H "X-Mock-Mode: deterministic" -d '{"phone":"01700000000"}'
-curl -X POST http://localhost:3000/api/bookings/BOOKING_ID/otp/verify \
+curl -X POST http://localhost:8080/api/bookings/BOOKING_ID/otp/verify \
   -H "Authorization: Bearer TOKEN" -H "Content-Type: application/json" -d '{"code":"123456"}'
-curl -X POST http://localhost:3000/api/bookings/BOOKING_ID/pay \
+curl -X POST http://localhost:8080/api/bookings/BOOKING_ID/pay \
   -H "Authorization: Bearer TOKEN" -H "X-Mock-Mode: deterministic"
 ```
 
@@ -96,7 +98,7 @@ PowerShell users set `$env:RUN_INTEGRATION_TESTS='true'`. The suite proves exact
 
 ## CI/CD and judging
 
-GitHub Actions runs change-aware frontend/backend checks on pull requests and pushes to `main`. Backend CI starts PostgreSQL and Redis, runs unit and integration tests, validates the build, builds the Docker image, and validates Compose. The `CI Success` check is intended for branch protection. Deployment runs only for pushes to `main`; replace the documented placeholder deploy commands with the target host credentials before production deployment.
+GitHub Actions runs change-aware frontend/backend checks on pull requests and pushes to `main`. Backend CI starts PostgreSQL and Redis, runs unit and integration tests, builds both backend and Nginx/frontend images, and validates Compose. The `CI Success` check is intended for branch protection. Deployment runs only for pushes to `main`; replace the documented placeholder deploy commands with the target host credentials before production deployment.
 
 For judging:
 

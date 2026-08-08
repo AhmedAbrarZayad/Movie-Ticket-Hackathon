@@ -1,0 +1,8 @@
+**/node_modules
+**/dist
+**/.env
+.git
+.github
+docs/*.pdf
+backend/test
+frontend/src/**/*.test.*

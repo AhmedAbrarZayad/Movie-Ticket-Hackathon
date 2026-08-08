@@ -9,13 +9,13 @@ docker compose run --rm backend npm run db:seed
 Fetch a public seat map:
 
 ```sh
-curl http://localhost:3000/api/showtimes/SHOWTIME_UUID/seats
+curl http://localhost:8080/api/showtimes/SHOWTIME_UUID/seats
 ```
 
 Hold one to eight seats atomically:
 
 ```sh
-curl -X POST http://localhost:3000/api/showtimes/SHOWTIME_UUID/holds \
+curl -X POST http://localhost:8080/api/showtimes/SHOWTIME_UUID/holds \
   -H "Authorization: Bearer ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
   -d '{"seatIds":["SEAT_UUID"]}'

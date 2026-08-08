@@ -1,6 +1,28 @@
 name: cinemaseat
 
 services:
+  nginx:
+    build:
+      context: ..
+      dockerfile: nginx/Dockerfile
+      args:
+        VITE_API_URL: /api
+    image: cinemaseat-nginx:${IMAGE_TAG:-local}
+    ports:
+      - "${NGINX_PORT:-8080}:8080"
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--spider", "http://127.0.0.1:8080/nginx-health"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    networks:
+      - backend-network
+
   backend:
     build:
       context: .
@@ -11,7 +33,7 @@ services:
       PORT: ${PORT:-3000}
       DATABASE_URL: postgresql://${POSTGRES_USER:-cinemaseat}:${POSTGRES_PASSWORD:-cinemaseat}@db:5432/${POSTGRES_DB:-cinemaseat}
       REDIS_URL: redis://redis:6379
-      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:5173}
+      CLIENT_ORIGIN: ${CLIENT_ORIGIN:-http://localhost:8080}
       JWT_ACCESS_SECRET: ${JWT_ACCESS_SECRET:-development-access-secret-change-before-production}
       JWT_REFRESH_SECRET: ${JWT_REFRESH_SECRET:-development-refresh-secret-change-before-production}
       COOKIE_SECURE: ${COOKIE_SECURE:-false}
@@ -22,11 +44,11 @@ services:
       OTP_TTL_SECONDS: ${OTP_TTL_SECONDS:-300}
       HOLD_SWEEP_INTERVAL_MS: ${HOLD_SWEEP_INTERVAL_MS:-5000}
       GATEWAY_URL: http://gateway:9000
-      # Must be reachable from the gateway container; localhost would point at the gateway itself.
-      PUBLIC_API_URL: http://backend:3000
+      # Gateway callbacks enter through the same reverse proxy used by clients.
+      PUBLIC_API_URL: http://nginx:8080
       GATEWAY_SECRET: ${GATEWAY_SECRET:-z2p-2026-secret}
     ports:
-      - "${API_PORT:-3000}:${PORT:-3000}"
+      - "127.0.0.1:${API_PORT:-3000}:${PORT:-3000}"
     depends_on:
       db:
         condition: service_healthy
@@ -53,7 +75,7 @@ services:
       - postgres-data:/var/lib/postgresql/data
       - ./docker/init:/docker-entrypoint-initdb.d:ro
     ports:
-      - "${POSTGRES_PORT:-5432}:5432"
+      - "127.0.0.1:${POSTGRES_PORT:-5432}:5432"
     restart: unless-stopped
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
@@ -80,12 +102,14 @@ services:
       redis:
         condition: service_healthy
     restart: unless-stopped
+    healthcheck:
+      disable: true
     networks:
       - backend-network
 
   gateway:
     image: asifmahmoud414/mock-gateway:latest
-    ports: ["${GATEWAY_PORT:-9000}:9000"]
+    ports: ["127.0.0.1:${GATEWAY_PORT:-9000}:9000"]
     environment:
       GATEWAY_SECRET: ${GATEWAY_SECRET:-z2p-2026-secret}
     restart: unless-stopped
@@ -98,7 +122,7 @@ services:
     volumes:
       - redis-data:/data
     ports:
-      - "${REDIS_PORT:-6379}:6379"
+      - "127.0.0.1:${REDIS_PORT:-6379}:6379"
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
