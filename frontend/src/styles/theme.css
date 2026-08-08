@@ -1,0 +1,213 @@
+:root {
+  --background: #131317;
+  --surface: #131317;
+  --surface-lowest: #0e0e12;
+  --surface-low: #1b1b1f;
+  --surface-high: #2a292e;
+  --surface-highest: #353439;
+  --surface-bright: #39393d;
+  --surface-container: #1f1f23;
+  --secondary-container: #454747;
+  --primary: #ffb4aa;
+  --primary-container: #e50914;
+  --primary-container-hover: #c0000c;
+  --secondary: #c6c6c7;
+  --text: #e4e1e7;
+  --text-title: #fff7f6;
+  --muted: #b4b5b5;
+}
+
+html,
+body {
+  background-color: #0b0b0f;
+  color: var(--text);
+}
+
+.cinema-bg {
+  background:
+    radial-gradient(circle at 20% 10%, rgba(229, 9, 20, 0.18), transparent 45%),
+    radial-gradient(circle at 80% 85%, rgba(0, 114, 215, 0.16), transparent 40%),
+    linear-gradient(180deg, #111218 0%, #0b0b0f 100%);
+}
+
+.glass-panel {
+  background: rgba(42, 41, 46, 0.6);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.movie-card-overlay {
+  background: linear-gradient(to top, #0b0b0f 0%, transparent 100%);
+}
+
+.input-ghost {
+  background: transparent;
+  border: none;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  color: var(--text);
+  padding: 12px 0;
+  transition: border-color 0.3s ease;
+}
+
+.input-ghost:focus {
+  outline: none;
+  border-bottom-color: var(--primary-container);
+}
+
+.input-ghost::placeholder {
+  color: var(--muted);
+}
+
+.otp-input {
+  width: 48px;
+  height: 64px;
+  text-align: center;
+  font-size: 24px;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  border-radius: 8px;
+  background: rgba(19, 19, 23, 0.6);
+  color: var(--text);
+  transition: all 0.3s ease;
+}
+
+.otp-input:focus {
+  outline: none;
+  border-color: var(--primary-container);
+  box-shadow: 0 0 0 2px rgba(229, 9, 20, 0.2);
+}
+
+.spinner {
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-left-color: var(--primary-container);
+  border-radius: 50%;
+  width: 20px;
+  height: 20px;
+  animation: spin 1s linear infinite;
+}
+
+.fade-in {
+  animation: fadeIn 0.5s ease-in-out;
+}
+
+.seat {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px 8px 4px 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin: 4px;
+}
+
+.seat.available {
+  border: 2px solid var(--secondary-container);
+  background-color: transparent;
+}
+
+.seat.available:hover {
+  border-color: var(--primary);
+  background-color: rgba(255, 180, 170, 0.1);
+  transform: scale(1.1);
+}
+
+.seat.selected {
+  background-color: var(--primary-container);
+  border: 2px solid var(--primary-container);
+  box-shadow: 0 0 8px rgba(229, 9, 20, 0.4);
+  transform: scale(1.05);
+}
+
+.seat.held {
+  background-color: var(--primary-container);
+  border: 2px solid var(--primary-container);
+  animation: pulseGlow 1.5s infinite alternate;
+  cursor: not-allowed;
+  opacity: 0.8;
+}
+
+.seat.booked {
+  background: repeating-linear-gradient(45deg, #1f1f23, #1f1f23 5px, #2a292e 5px, #2a292e 10px);
+  border: 2px solid var(--surface-highest);
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+.screen-curve {
+  width: 80%;
+  height: 100px;
+  border-top: 4px solid var(--text-title);
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  margin: 0 auto 40px auto;
+  position: relative;
+  background: linear-gradient(to bottom, rgba(255, 255, 255, 0.1) 0%, transparent 100%);
+  mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+  -webkit-mask-image: linear-gradient(to bottom, black 0%, transparent 100%);
+}
+
+.screen-curve::after {
+  content: 'SCREEN';
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--muted);
+  font-size: 12px;
+  letter-spacing: 0.2em;
+}
+
+.confetti-container {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  overflow: hidden;
+  z-index: 10;
+}
+
+.confetti {
+  position: absolute;
+  top: 0;
+  opacity: 0;
+  animation: fall linear forwards;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+@keyframes pulseGlow {
+  from {
+    box-shadow: 0 0 2px rgba(229, 9, 20, 0.4);
+  }
+  to {
+    box-shadow: 0 0 12px rgba(229, 9, 20, 0.8);
+  }
+}
+
+@keyframes fall {
+  0% {
+    transform: translateY(-100px) rotate(0deg);
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(100vh) rotate(720deg);
+    opacity: 0;
+  }
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
