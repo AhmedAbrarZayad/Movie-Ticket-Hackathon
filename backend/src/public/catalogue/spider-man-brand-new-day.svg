@@ -1,0 +1,15 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+  <rect width="800" height="1200" fill="#171b29"/>
+  <rect x="0" y="0" width="800" height="1200" fill="url(#web)" opacity="0.86"/>
+  <defs>
+    <linearGradient id="web" x1="0" x2="1" y1="0" y2="1">
+      <stop offset="0" stop-color="#223868"/>
+      <stop offset="1" stop-color="#121625"/>
+    </linearGradient>
+  </defs>
+  <text x="400" y="150" font-family="Arial" font-size="28" text-anchor="middle" fill="#dceaff">SPIDER-MAN</text>
+  <text x="400" y="610" font-family="Arial" font-weight="700" font-size="68" text-anchor="middle" fill="#ffffff">BRAND NEW DAY</text>
+  <text x="400" y="700" font-family="Arial" font-size="24" text-anchor="middle" fill="#d0e3ff">ADVENTURE • ACTION</text>
+  <path d="M400 100 L400 1100 M80 500 C200 240 600 240 720 500 M80 900 C200 1080 600 1080 720 900" fill="none" stroke="#c4e7ff" stroke-width="2" opacity="0.7"/>
+  <text x="400" y="1050" font-family="Arial" font-size="24" text-anchor="middle" fill="#dceaff">CINEMASEAT</text>
+</svg>
