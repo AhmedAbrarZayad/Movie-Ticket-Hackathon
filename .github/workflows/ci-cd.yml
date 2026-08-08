@@ -1,75 +1,132 @@
 name: CI/CD Pipeline
 
-# ==========================================
-# 1. WHEN SHOULD THIS RUN? (The Triggers)
-# ==========================================
 on:
-  # Run when code is pushed to the main branch
   push:
     branches: [ "main" ]
-    # CHANGE-AWARE: Ignore these files. If you only change a Readme, don't run tests!
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.gitignore'
-
-  # Run when a Pull Request is opened or updated targeting main
   pull_request:
     branches: [ "main" ]
-    paths-ignore:
-      - 'docs/**'
-      - '**.md'
-      - '.gitignore'
 
-# ==========================================
-# 2. THE JOBS (The actual work)
-# ==========================================
 jobs:
-  
-  # --- JOB A: CONTINUOUS INTEGRATION (CI) ---
-  test-and-build:
-    name: Test & Build (CI)
-    runs-on: ubuntu-latest # GitHub gives us a free Linux computer to run this
-
+  # ---------- JOB 0: THE TRAFFIC COP ----------
+  # Looks at which folders changed in this push/PR
+  changes:
+    name: Detect Changes
+    runs-on: ubuntu-latest
+    outputs:
+      frontend: ${{ steps.filter.outputs.frontend }}
+      backend: ${{ steps.filter.outputs.backend }}
     steps:
-      - name: 1. Download my code
+      - name: Download code
         uses: actions/checkout@v4
 
-      - name: 2. Install Node.js
+      - name: Check which folders changed
+        uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            frontend:
+              - 'frontend/**'
+              - '.github/**'
+            backend:
+              - 'backend/**'
+              - '.github/**'
+
+  # ---------- JOB 1: FRONTEND CI ----------
+  frontend-ci:
+    name: Frontend CI
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.frontend == 'true'   # only run if frontend changed
+    defaults:
+      run:
+        working-directory: frontend                # <-- "cd frontend" before every command
+    steps:
+      - name: Download code
+        uses: actions/checkout@v4
+
+      - name: Install Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: frontend/package-lock.json  # <-- where the lock file lives
 
-      - name: 3. Install project dependencies
+      - name: Install dependencies
         run: npm ci
 
-      - name: 4. Check code for errors (Linting)
-        # --if-present means "if this script exists in package.json, run it. If not, skip it."
-        run: npm run lint --if-present 
+      - name: Lint
+        run: npm run lint --if-present
 
-      - name: 5. Run automated tests
+      - name: Test
         run: npm test --if-present
 
-      - name: 6. Build the application
+      - name: Build
         run: npm run build --if-present
 
-
-  # --- JOB B: CONTINUOUS DEPLOYMENT (CD) ---
-  deploy:
-    name: Deploy to Production (CD)
+  # ---------- JOB 2: BACKEND CI ----------
+  backend-ci:
+    name: Backend CI
     runs-on: ubuntu-latest
-    needs: test-and-build # CRITICAL: This job will ONLY run if the CI job passes!
-
-    # CRITICAL: Only deploy on pushes to main, NEVER on Pull Requests
-    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
-
+    needs: changes
+    if: needs.changes.outputs.backend == 'true'    # only run if backend changed
+    defaults:
+      run:
+        working-directory: backend                 # <-- "cd backend" before every command
     steps:
-      - name: 1. Download my code
+      - name: Download code
         uses: actions/checkout@v4
 
-      - name: 2. Deploy the app
+      - name: Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: backend/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Test
+        run: npm test --if-present
+
+      - name: Build
+        run: npm run build --if-present
+
+  # ---------- JOB 3: THE SINGLE GREEN LIGHT ----------
+  # This is the ONLY job your branch protection will require.
+  # It passes even if frontend/backend jobs were skipped (e.g. docs-only change).
+  ci-success:
+    name: CI Success
+    runs-on: ubuntu-latest
+    needs: [changes, frontend-ci, backend-ci]
+    if: always()
+    steps:
+      - name: Fail if any job failed
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+
+      - name: All good
+        run: echo "✅ All required checks passed or were skipped."
+
+  # ---------- JOB 4: DEPLOYMENT (CD) ----------
+  deploy:
+    name: Deploy
+    runs-on: ubuntu-latest
+    needs: [changes, ci-success]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'  # main pushes only
+    steps:
+      - name: Download code
+        uses: actions/checkout@v4
+
+      - name: Deploy frontend
+        if: needs.changes.outputs.frontend == 'true'
         run: |
-          echo "🚀 Deploying application..."
-          echo "✅ Deployment successful!"
-          # LATER: You will replace these echo statements with your real deploy command
-          # Example: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+          echo "🚀 Deploying frontend..."
+          # Later, replace with your real command, e.g.:
+          # npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
+
+      - name: Deploy backend
+        if: needs.changes.outputs.backend == 'true'
+        run: |
+          echo "🚀 Deploying backend..."
+          # Later, replace with your real backend deploy command
