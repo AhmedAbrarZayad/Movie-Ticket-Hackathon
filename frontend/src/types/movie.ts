@@ -7,6 +7,7 @@ export interface Movie {
   genres: string[]
   rating: number
   posterUrl: string
+  trailerUrl?: string
   heroDescription: string
   heroTag: string
   status: MovieStatus

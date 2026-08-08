@@ -31,6 +31,7 @@ export const contract = defineContract(
           title: field.text(),
           description: field.text().optional(),
           posterUrl: field.text().optional(),
+          trailerUrl: field.text().optional(),
           durationMinutes: field.int(),
           genre: field.text(),
           rating: field.text().optional(),
