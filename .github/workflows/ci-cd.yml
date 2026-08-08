@@ -1,0 +1,75 @@
+name: CI/CD Pipeline
+
+# ==========================================
+# 1. WHEN SHOULD THIS RUN? (The Triggers)
+# ==========================================
+on:
+  # Run when code is pushed to the main branch
+  push:
+    branches: [ "main" ]
+    # CHANGE-AWARE: Ignore these files. If you only change a Readme, don't run tests!
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'
+
+  # Run when a Pull Request is opened or updated targeting main
+  pull_request:
+    branches: [ "main" ]
+    paths-ignore:
+      - 'docs/**'
+      - '**.md'
+      - '.gitignore'
+
+# ==========================================
+# 2. THE JOBS (The actual work)
+# ==========================================
+jobs:
+  
+  # --- JOB A: CONTINUOUS INTEGRATION (CI) ---
+  test-and-build:
+    name: Test & Build (CI)
+    runs-on: ubuntu-latest # GitHub gives us a free Linux computer to run this
+
+    steps:
+      - name: 1. Download my code
+        uses: actions/checkout@v4
+
+      - name: 2. Install Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: 3. Install project dependencies
+        run: npm ci
+
+      - name: 4. Check code for errors (Linting)
+        # --if-present means "if this script exists in package.json, run it. If not, skip it."
+        run: npm run lint --if-present 
+
+      - name: 5. Run automated tests
+        run: npm test --if-present
+
+      - name: 6. Build the application
+        run: npm run build --if-present
+
+
+  # --- JOB B: CONTINUOUS DEPLOYMENT (CD) ---
+  deploy:
+    name: Deploy to Production (CD)
+    runs-on: ubuntu-latest
+    needs: test-and-build # CRITICAL: This job will ONLY run if the CI job passes!
+
+    # CRITICAL: Only deploy on pushes to main, NEVER on Pull Requests
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: 1. Download my code
+        uses: actions/checkout@v4
+
+      - name: 2. Deploy the app
+        run: |
+          echo "🚀 Deploying application..."
+          echo "✅ Deployment successful!"
+          # LATER: You will replace these echo statements with your real deploy command
+          # Example: npx vercel --prod --token=${{ secrets.VERCEL_TOKEN }}
