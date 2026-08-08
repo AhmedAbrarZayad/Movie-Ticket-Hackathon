@@ -6,6 +6,13 @@ on:
   pull_request:
     branches: [ "main" ]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-cd-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   # ---------- JOB 0: THE TRAFFIC COP ----------
   # Looks at which folders changed in this push/PR
@@ -92,6 +99,9 @@ jobs:
       - name: Build
         run: npm run build --if-present
 
+      - name: Build Docker image
+        run: docker build --tag cinemaseat-backend:${{ github.sha }} .
+
   # ---------- JOB 3: THE SINGLE GREEN LIGHT ----------
   # This is the ONLY job your branch protection will require.
   # It passes even if frontend/backend jobs were skipped (e.g. docs-only change).
@@ -130,3 +140,7 @@ jobs:
         run: |
           echo "🚀 Deploying backend..."
           # Later, replace with your real backend deploy command
+
+      - name: Nothing to deploy
+        if: needs.changes.outputs.frontend != 'true' && needs.changes.outputs.backend != 'true'
+        run: echo "No deployable application changes detected."
