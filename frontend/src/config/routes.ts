@@ -4,4 +4,6 @@ export const routes = {
   booking: '/booking/:movieId',
   payment: '/payment/:movieId',
   bookingConfirmation: '/booking-confirmation/:movieId',
+  login: '/login',
+  register: '/register',
 } as const

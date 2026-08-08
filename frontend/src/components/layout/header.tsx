@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom'
 import { routes } from '../../config/routes'
+import { useAuth } from '../../features/auth/auth-context'
 
 interface HeaderProps {
   searchQuery: string
@@ -7,6 +8,8 @@ interface HeaderProps {
 }
 
 export function Header({ searchQuery, onSearchChange }: HeaderProps) {
+  const { user, isInitializing, logout } = useAuth()
+
   return (
     <header className="fixed top-0 z-50 flex h-20 w-full items-center justify-between border-b border-white/10 bg-[var(--surface)]/80 px-5 shadow-sm backdrop-blur-xl md:px-16">
       <div className="flex items-center gap-8 md:gap-12">
@@ -37,16 +40,22 @@ export function Header({ searchQuery, onSearchChange }: HeaderProps) {
             className="glass-panel w-64 rounded-t-lg border-b border-white/10 bg-[var(--surface-high)] py-2 pr-4 pl-10 text-[var(--text)] outline-none transition-colors focus:border-[var(--primary-container)]"
           />
         </div>
-        <button className="text-[var(--muted)] transition-colors hover:text-[var(--primary-container)]" type="button" aria-label="Notifications">
-          <span className="material-symbols-outlined">notifications</span>
-        </button>
-        <div className="h-10 w-10 overflow-hidden rounded-full border border-white/20 transition-colors hover:border-[var(--primary-container)]">
-          <img
-            src="https://lh3.googleusercontent.com/aida-public/AB6AXuB0Kyt-lJYF-bfDZsiUkQYkHFL1odMUz3gECHJYuBc6ybY9ssVUlzMOGEKoI0XfAKhqc2gczCNuRMtwtcv-G9yWawOktVA7bOZ5Lm9MIQGcMIZDjF1qGGtIZ0F4QumvWyfjoZi9uK2Okt9_rlVFuKtKUqiQimpujlqtBMGUYgPHtXQmMtJFpPCyVWjvcOU_Mc7YN1pihaqrQE8du5igRs_m4_6u7hy2AaH_yBtrU-5JUrYmDxdrrqJwXw"
-            alt="User profile avatar"
-            className="h-full w-full object-cover"
-          />
-        </div>
+        {!isInitializing && user ? (
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full border border-red-300/30 bg-red-500/10 font-semibold text-[var(--primary)]" aria-hidden="true">
+              {user.name.slice(0, 1).toUpperCase()}
+            </div>
+            <span className="hidden max-w-28 truncate text-sm text-white md:block">{user.name}</span>
+            <button onClick={() => void logout()} className="text-sm text-[var(--muted)] transition hover:text-white" type="button">Logout</button>
+          </div>
+        ) : !isInitializing ? (
+          <div className="flex items-center gap-2">
+            <Link to={routes.login} className="rounded-lg px-3 py-2 text-sm text-[var(--muted)] transition hover:text-white">Sign in</Link>
+            <Link to={routes.register} className="rounded-lg bg-[var(--primary-container)] px-4 py-2 text-sm font-semibold text-white transition hover:bg-[var(--primary-container-hover)]">Join</Link>
+          </div>
+        ) : (
+          <div className="h-10 w-24 animate-pulse rounded-lg bg-white/5" aria-label="Loading account" />
+        )}
       </div>
     </header>
   )

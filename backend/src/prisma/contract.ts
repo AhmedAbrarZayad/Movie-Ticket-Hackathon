@@ -19,6 +19,22 @@ export const contract = defineContract(
         relations: {
           bookings: rel.hasMany('Booking', { by: 'userId' }),
           heldSeats: rel.hasMany('ShowtimeSeat', { by: 'heldBy' }),
+          refreshSessions: rel.hasMany('RefreshSession', { by: 'userId' }),
+        },
+      }),
+
+      RefreshSession: model('RefreshSession', {
+        fields: {
+          id: field.id.uuidv7String(),
+          userId: field.uuidString(),
+          tokenHash: field.text().unique(),
+          expiresAt: field.temporal.timestamptz(),
+          revokedAt: field.temporal.timestamptz().optional(),
+          createdAt: field.temporal.createdAt(),
+          updatedAt: field.temporal.updatedAt(),
+        },
+        relations: {
+          user: rel.belongsTo('User', { from: 'userId', to: 'id' }),
         },
       }),
 
@@ -31,6 +47,7 @@ export const contract = defineContract(
           title: field.text(),
           description: field.text().optional(),
           posterUrl: field.text().optional(),
+          trailerUrl: field.text().optional(),
           durationMinutes: field.int(),
           genre: field.text(),
           rating: field.text().optional(),

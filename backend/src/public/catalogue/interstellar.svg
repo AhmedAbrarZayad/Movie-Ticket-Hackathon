@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+  <rect width="800" height="1200" fill="#0b1322"/>
+  <rect x="30" y="30" width="740" height="1140" rx="12" fill="none" stroke="#bcb8ff" stroke-width="2"/>
+  <text x="400" y="160" font-family="Arial" font-size="26" text-anchor="middle" fill="#bcb8ff">SCI-FI ADVENTURE</text>
+  <text x="400" y="610" font-family="Arial" font-weight="700" font-size="82" text-anchor="middle" fill="#ffffff">INTERSTELLAR</text>
+  <text x="400" y="700" font-family="Arial" font-size="24" text-anchor="middle" fill="#d0d0d0">BEYOND THE STARS</text>
+  <circle cx="400" cy="420" r="210" fill="none" stroke="#a7f3d0" stroke-width="2"/>
+  <path d="M400 210 C520 330 520 520 400 740 C280 520 280 330 400 210" fill="none" stroke="#ecfbff" stroke-width="2" opacity="0.9"/>
+  <text x="400" y="1040" font-family="Arial" font-size="24" text-anchor="middle" fill="#bcb8ff">CINEMASEAT</text>
+</svg>
