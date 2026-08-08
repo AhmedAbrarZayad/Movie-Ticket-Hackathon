@@ -5,7 +5,9 @@
   "type": "module",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node index.js",
+    "test": "node --test",
+    "build": "node --check index.js",
     "contract:emit": "prisma-next contract emit",
     "dev": "nodemon index.js"
   },
