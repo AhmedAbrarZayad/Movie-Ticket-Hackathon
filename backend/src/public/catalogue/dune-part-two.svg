@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="800" height="1200" viewBox="0 0 800 1200">
+  <rect width="800" height="1200" fill="#1d1a16"/>
+  <rect x="30" y="30" width="740" height="1140" fill="none" stroke="#d89147" stroke-width="3"/>
+  <text x="400" y="160" font-family="Arial" font-size="30" text-anchor="middle" fill="#e6b774">DUNE PART TWO</text>
+  <text x="400" y="610" font-family="Arial" font-weight="700" font-size="84" text-anchor="middle" fill="#fff1df">DUNE</text>
+  <text x="400" y="690" font-family="Arial" font-size="24" text-anchor="middle" fill="#e0cfc1">THE PROPHECY</text>
+  <path d="M150 850 C250 520 540 500 650 870" fill="none" stroke="#e9b469" stroke-width="5" opacity="0.95"/>
+  <text x="400" y="1050" font-family="Arial" font-size="24" text-anchor="middle" fill="#e6b774">CINEMASEAT</text>
+</svg>
