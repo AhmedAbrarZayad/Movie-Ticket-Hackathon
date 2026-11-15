@@ -19,4 +19,4 @@ EXPOSE 3000
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD wget --quiet --spider http://127.0.0.1:3000/health || exit 1
 
-CMD ["sh", "-c", "npm run db:migrate && node index.js"]
+CMD ["sh", "-c", "npm run db:migrate && (node worker.js & exec node index.js)"]
